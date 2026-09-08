@@ -71,6 +71,14 @@ export function searchItems(keyword, page = 1, opts) {
   return callCj('/product/list', { productNameEn: keyword, pageNum: page, pageSize: 24 }, opts)
 }
 
+export function listByCategory(categoryId, page = 1, opts) {
+  return callCj('/product/list', { categoryId, pageNum: page, pageSize: 24 }, opts)
+}
+
 export function getItemDetail(itemId, opts) {
   return callCj('/product/query', { pid: itemId }, opts)
+}
+
+export function getCategories(opts) {
+  return callCj('/product/getCategory', {}, opts)
 }

@@ -104,7 +104,7 @@ function normalizeVariants(container) {
 
   // CJ variants are usually a single combined label (e.g. "Black-M") rather
   // than separate color/size axes, so they're grouped under one selector.
-  const propGroups = values.length ? [{ name: 'Safidy', values }] : []
+  const propGroups = values.length ? [{ name: 'Options', values }] : []
 
   const skus = variants.map((v) => ({
     skuId: String(pick(v, ['vid', 'variantSku', 'sku']) || ''),
@@ -115,6 +115,36 @@ function normalizeVariants(container) {
   }))
 
   return { propGroups, skus }
+}
+
+// CJ's category tree (from /product/getCategory) is nested: an array of
+// wrapper entries, each holding a categoryFirstList of top-level
+// categories, which in turn hold second/third-level lists. Only the
+// first-level categories are used here (a simple homepage filter row),
+// with defensive field-name candidates since the exact shape isn't
+// confirmed - see api/categories.js's ?raw=1 escape hatch.
+export function normalizeCategories(raw) {
+  const container = raw?.data && typeof raw.data === 'object' ? raw.data : raw
+  const topLevel = Array.isArray(container) ? container : pick(container || {}, ['list', 'categories'])
+  if (!Array.isArray(topLevel)) return []
+
+  const firstLevel = []
+  for (const entry of topLevel) {
+    const nested = pick(entry, ['categoryFirstList'])
+    if (Array.isArray(nested)) {
+      firstLevel.push(...nested)
+    } else {
+      firstLevel.push(entry)
+    }
+  }
+
+  return firstLevel
+    .map((c) => ({
+      id: pick(c, ['categoryFirstId', 'categoryId', 'id']),
+      name: pick(c, ['categoryFirstName', 'categoryName', 'name'])
+    }))
+    .filter((c) => c.id && c.name)
+    .map((c) => ({ id: String(c.id), name: String(c.name) }))
 }
 
 export function normalizeDetailResponse(rawEntry) {

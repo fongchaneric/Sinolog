@@ -1,13 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import Banner from '../components/Banner.vue'
 import QuickLinks from '../components/QuickLinks.vue'
 import ProductCard from '../components/ProductCard.vue'
-import { getTrendingProducts } from '../utils/api'
-import { getRecentSearches, addRecentSearch } from '../utils/recentSearches'
+import { getTrendingProducts, getCategories } from '../utils/api'
+import { getRecentSearches } from '../utils/recentSearches'
 
-const router = useRouter()
 const loading = ref(true)
 const loadingMore = ref(false)
 const error = ref('')
@@ -16,14 +14,13 @@ const sentinel = ref(null)
 let observer = null
 let keywordCursor = 0
 
-// Quick-search shortcuts shown as chips - each tap does a single normal
-// search, so this list can be broader than the server's trending set.
-const trendingKeywords = ['手机壳', '钥匙扣', '数据线', '内存卡', '蓝牙耳机', '充电宝']
+const categories = ref([])
+const activeCategory = ref(null) // null = "All"
 
 // Leans the trending grid toward the buyer's own last few searches once
 // they have any, but not exclusively - every third batch falls back to
 // the server's own generic default keyword so the grid isn't 100% just
-// their history.
+// their history. Only applies when browsing "All" (no category picked).
 function nextKeyword() {
   const recent = getRecentSearches()
   if (!recent.length) return undefined
@@ -41,7 +38,9 @@ async function loadBatch(isInitial) {
     loadingMore.value = true
   }
   try {
-    const data = await getTrendingProducts(nextKeyword())
+    const data = activeCategory.value
+      ? await getTrendingProducts({ categoryId: activeCategory.value })
+      : await getTrendingProducts({ keyword: nextKeyword() })
     products.value = isInitial ? data.items : [...products.value, ...data.items]
   } catch (e) {
     if (isInitial) error.value = e.message
@@ -53,13 +52,26 @@ async function loadBatch(isInitial) {
   }
 }
 
-function goSearch(keyword) {
-  addRecentSearch(keyword)
-  router.push({ name: 'search', query: { q: keyword } })
+function selectCategory(id) {
+  if (activeCategory.value === id) return
+  activeCategory.value = id
+  products.value = []
+  loadBatch(true)
+}
+
+async function loadCategories() {
+  try {
+    const data = await getCategories()
+    categories.value = data.categories || []
+  } catch {
+    // The category row is a nice-to-have filter - a failure here shouldn't
+    // block the trending grid itself from loading.
+  }
 }
 
 onMounted(() => {
   loadBatch(true)
+  loadCategories()
   observer = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting) loadBatch(false)
@@ -84,14 +96,22 @@ onUnmounted(() => {
       <span>›</span>
     </div>
 
-    <div class="flex gap-2 px-2 pt-3 overflow-x-auto no-scrollbar">
+    <div v-if="categories.length" class="flex gap-2 px-2 pt-3 overflow-x-auto no-scrollbar">
       <button
-        v-for="k in trendingKeywords"
-        :key="k"
-        @click="goSearch(k)"
-        class="shrink-0 text-xs bg-white border border-gray-200 rounded-full px-3 py-1.5 text-gray-600"
+        @click="selectCategory(null)"
+        class="shrink-0 text-xs rounded-full px-3 py-1.5 border"
+        :class="!activeCategory ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
       >
-        {{ k }}
+        All
+      </button>
+      <button
+        v-for="c in categories"
+        :key="c.id"
+        @click="selectCategory(c.id)"
+        class="shrink-0 text-xs rounded-full px-3 py-1.5 border"
+        :class="activeCategory === c.id ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
+      >
+        {{ c.name }}
       </button>
     </div>
 
@@ -109,7 +129,7 @@ onUnmounted(() => {
 
       <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">
         <p>No products found right now.</p>
-        <p class="text-xs mt-1">Try another keyword above, or try again in a moment.</p>
+        <p class="text-xs mt-1">Try another category above, or try again in a moment.</p>
       </div>
 
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 tv:grid-cols-6 gap-2">
