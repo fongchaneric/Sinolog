@@ -1,4 +1,4 @@
-import { searchItems } from './_lib/rapidapi.js'
+import { searchItems } from './_lib/cjdropshipping.js'
 import { normalizeSearchResponse } from './_lib/normalize.js'
 import { getCachedSearch, setCachedSearch } from './_lib/searchCache.js'
 
@@ -17,16 +17,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // The upstream is intermittently slow rather than reliably slow (the
-    // same call fails then succeeds seconds later), so split the time
-    // budget into two shorter attempts instead of one long one - that
-    // gives a second chance within Vercel's own ~10s execution cap.
-    const raw = await searchItems(keyword, page, { timeoutMs: 6000, maxRetries: 1 })
+    const raw = await searchItems(keyword, page, { timeoutMs: 8000, maxRetries: 1 })
 
-    // Temporary diagnostic escape hatch: ?raw=1 returns RapidAPI's
+    // Temporary diagnostic escape hatch: ?raw=1 returns CJ Dropshipping's
     // untouched response so the field-name mapping in _lib/normalize.js
     // can be corrected against the real payload shape. Safe to keep - it
-    // never touches the key, only what RapidAPI already sent back.
+    // never touches the token, only what CJ already sent back.
     if (req.query.raw === '1') {
       res.setHeader('Cache-Control', 'no-store')
       res.status(200).json(raw)
@@ -42,8 +38,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('search error', err)
 
-    // The RapidAPI plan in use is rate-limited (and occasionally slow), so
-    // a live failure shouldn't leave the buyer looking at an empty page -
+    // A live failure shouldn't leave the buyer looking at an empty page -
     // fall back to the last successful result for this exact keyword.
     if (page === '1') {
       const cached = await getCachedSearch(keyword)

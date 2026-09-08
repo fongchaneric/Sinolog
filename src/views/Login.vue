@@ -62,7 +62,7 @@ function friendlyError(e) {
       <div class="flex flex-col items-center mb-8">
         <div class="w-14 h-14 rounded-2xl bg-brand text-white flex items-center justify-center font-black text-2xl">S</div>
         <h1 class="text-xl font-bold text-gray-800 mt-3">Tonga soa amin'ny Sinolog</h1>
-        <p class="text-xs text-gray-400 mt-1">Mividy avy any 1688 mora sy azo antoka</p>
+        <p class="text-xs text-gray-400 mt-1">Mividy entana avy any Shina mora sy azo antoka</p>
       </div>
 
       <form @submit.prevent="submit" class="space-y-3">

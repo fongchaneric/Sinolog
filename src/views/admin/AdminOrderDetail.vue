@@ -76,7 +76,7 @@ async function setStatus(status) {
             <p class="text-sm text-gray-800 line-clamp-2">{{ line.title }}</p>
             <p v-if="line.variantLabel" class="text-xs text-gray-400">{{ line.variantLabel }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ formatYuan(line.price) }} × {{ line.quantity }}</p>
-            <a :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 Hita ao 1688</a>
+            <a v-if="line.link" :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 Hita ao amin'ny loharano</a>
           </div>
         </div>
         <div class="flex justify-between font-bold pt-2">

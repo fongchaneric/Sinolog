@@ -65,7 +65,7 @@ onMounted(loadTrending)
 
       <div v-else-if="error" class="text-center text-sm text-gray-500 py-10">
         <p>{{ error }}</p>
-        <p class="text-xs mt-1 text-gray-400">Amarino fa efa voafefy ao amin'ny Vercel ny RAPIDAPI_KEY sy RAPIDAPI_HOST.</p>
+        <p class="text-xs mt-1 text-gray-400">Amarino fa efa voafefy ao amin'ny Vercel ny CJ_API_KEY, CJ_API_EMAIL ary CJ_API_BASE_URL.</p>
       </div>
 
       <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">

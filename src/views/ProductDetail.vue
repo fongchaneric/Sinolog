@@ -119,8 +119,8 @@ onMounted(load)
               <p class="text-gray-700 font-medium">🏪 {{ product.shopName || 'Mpivarotra tsy fantatra' }}</p>
               <p class="text-gray-400 text-xs mt-1">📦 Product ID: {{ product.itemId }}</p>
             </div>
-            <a :href="product.link" target="_blank" rel="noopener" class="text-brand text-xs shrink-0 flex items-center gap-1">
-              🔗 Hita ao 1688
+            <a v-if="product.link" :href="product.link" target="_blank" rel="noopener" class="text-brand text-xs shrink-0 flex items-center gap-1">
+              🔗 Hita ao amin'ny loharano
             </a>
           </div>
         </div>
