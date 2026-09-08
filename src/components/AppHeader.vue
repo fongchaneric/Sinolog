@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { addRecentSearch } from '../utils/recentSearches'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +12,7 @@ const toast = ref('')
 function submitSearch() {
   const q = keyword.value.trim()
   if (!q) return
+  addRecentSearch(q)
   router.push({ name: 'search', query: { q } })
 }
 
@@ -31,13 +33,13 @@ function onImagePicked(e) {
 
 <template>
   <header class="sticky top-0 z-30 bg-gradient-to-r from-brand to-brand-dark shadow-md">
-    <div class="max-w-7xl mx-auto px-3 py-1.5 flex items-center gap-3">
+    <div class="max-w-7xl mx-auto px-3 py-1 flex items-center gap-3">
       <router-link to="/" class="shrink-0 flex items-center gap-1.5">
         <div class="w-8 h-8 rounded-lg bg-white/95 flex items-center justify-center font-black text-brand text-lg">S</div>
         <span class="hidden sm:block text-white font-bold text-lg tracking-tight">Sinolog</span>
       </router-link>
 
-      <form @submit.prevent="submitSearch" class="flex-1 flex items-center bg-white rounded-full overflow-hidden pl-3.5 pr-1 py-1 gap-1">
+      <form @submit.prevent="submitSearch" class="flex-1 flex items-center bg-white rounded-full overflow-hidden pl-3.5 pr-1 py-0.5 gap-1">
         <input
           v-model="keyword"
           type="search"

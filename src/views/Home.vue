@@ -1,38 +1,80 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Banner from '../components/Banner.vue'
 import QuickLinks from '../components/QuickLinks.vue'
 import ProductCard from '../components/ProductCard.vue'
 import { getTrendingProducts } from '../utils/api'
+import { getRecentSearches, addRecentSearch } from '../utils/recentSearches'
 
 const router = useRouter()
 const loading = ref(true)
+const loadingMore = ref(false)
 const error = ref('')
 const products = ref([])
+const noMore = ref(false)
+const sentinel = ref(null)
+let observer = null
+let keywordCursor = 0
 
 // Quick-search shortcuts shown as chips - each tap does a single normal
 // search, so this list can be broader than the server's trending set.
 const trendingKeywords = ['手机壳', '钥匙扣', '数据线', '内存卡', '蓝牙耳机', '充电宝']
 
-async function loadTrending() {
-  loading.value = true
-  error.value = ''
+// Leans the trending grid toward the buyer's own last few searches once
+// they have any, cycling through them one at a time per batch; falls back
+// to the server's own random default keyword when there's no history yet.
+function nextKeyword() {
+  const recent = getRecentSearches()
+  if (!recent.length) return undefined
+  const kw = recent[keywordCursor % recent.length]
+  keywordCursor++
+  return kw
+}
+
+async function loadBatch(isInitial) {
+  if (isInitial) {
+    loading.value = true
+    error.value = ''
+  } else {
+    if (loading.value || loadingMore.value || noMore.value) return
+    loadingMore.value = true
+  }
   try {
-    const data = await getTrendingProducts()
-    products.value = data.items
+    const data = await getTrendingProducts(nextKeyword())
+    if (!data.items.length) {
+      noMore.value = true
+    } else {
+      products.value = isInitial ? data.items : [...products.value, ...data.items]
+    }
   } catch (e) {
-    error.value = e.message
+    if (isInitial) error.value = e.message
+    // A failed "load more" attempt just stays quiet - the grid already has content.
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
 
 function goSearch(keyword) {
+  addRecentSearch(keyword)
   router.push({ name: 'search', query: { q: keyword } })
 }
 
-onMounted(loadTrending)
+onMounted(() => {
+  loadBatch(true)
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadBatch(false)
+    },
+    { rootMargin: '400px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <template>
@@ -75,6 +117,12 @@ onMounted(loadTrending)
 
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 tv:grid-cols-6 gap-2">
         <ProductCard v-for="p in products" :key="p.itemId" :product="p" />
+      </div>
+
+      <div ref="sentinel" class="h-1" />
+      <div v-if="loadingMore" class="flex flex-col items-center py-6 gap-2 text-gray-400 text-sm">
+        <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
+        <span>Loading...</span>
       </div>
     </section>
   </div>
