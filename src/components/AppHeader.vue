@@ -35,7 +35,7 @@ function onImagePicked(e) {
   <header class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
     <div class="max-w-7xl mx-auto px-3 py-1.5 flex items-center gap-3">
       <router-link to="/" class="shrink-0 flex items-center gap-1.5">
-        <div class="w-8 h-8 rounded-lg bg-white/95 flex items-center justify-center font-black text-brand text-lg">S</div>
+        <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-brand text-lg">S</div>
         <span class="hidden sm:block text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
       </router-link>
 
@@ -46,8 +46,8 @@ function onImagePicked(e) {
           placeholder="Search for the product you want..."
           class="flex-1 min-w-0 text-sm outline-none bg-transparent"
         />
-        <button type="button" @click="openImagePicker" class="text-gray-400 p-1.5 shrink-0" aria-label="Search by photo">
-          <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <button type="button" @click="openImagePicker" class="text-gray-400 p-1 shrink-0" aria-label="Search by photo">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 17a4 4 0 100-8 4 4 0 000 8z" />
           </svg>
