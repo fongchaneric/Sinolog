@@ -15,8 +15,16 @@ export function getProductDetail(itemId) {
   return request(`/api/product?itemId=${encodeURIComponent(itemId)}`)
 }
 
-export function getTrendingProducts(keyword) {
-  return request(`/api/trending${keyword ? `?keyword=${encodeURIComponent(keyword)}` : ''}`)
+export function getTrendingProducts({ keyword, categoryId } = {}) {
+  const params = new URLSearchParams()
+  if (categoryId) params.set('categoryId', categoryId)
+  else if (keyword) params.set('keyword', keyword)
+  const qs = params.toString()
+  return request(`/api/trending${qs ? `?${qs}` : ''}`)
+}
+
+export function getCategories() {
+  return request('/api/categories')
 }
 
 export async function updateOrderStatus(idToken, { orderId, status, adminNote }) {
