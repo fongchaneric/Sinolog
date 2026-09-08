@@ -4,6 +4,7 @@ import { ref as dbRef, onValue, off } from 'firebase/database'
 import { db } from '../../firebase'
 import { formatYuan } from '../../utils/currency'
 import { statusMeta } from '../../utils/orderStatus'
+import { proxyImage } from '../../utils/image'
 
 const orders = ref([])
 let ordersRefHandle = null
@@ -59,7 +60,7 @@ const recentOrders = computed(() => [...orders.value].sort((a, b) => b.createdAt
         :to="{ name: 'admin-order-detail', params: { orderId: o.id } }"
         class="flex items-center gap-3 px-4 py-3 border-b last:border-0 border-gray-50 hover:bg-gray-50"
       >
-        <img :src="o.items?.[0]?.image" class="w-10 h-10 rounded object-cover bg-gray-100" />
+        <img :src="proxyImage(o.items?.[0]?.image)" class="w-10 h-10 rounded object-cover bg-gray-100" />
         <div class="flex-1 min-w-0">
           <p class="text-sm text-gray-800 truncate">{{ o.userEmail }}</p>
           <p class="text-xs text-gray-400">{{ new Date(o.createdAt).toLocaleString('fr-FR') }}</p>

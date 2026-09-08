@@ -4,6 +4,7 @@ import { ref as dbRef, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
 import { statusMeta } from '../utils/orderStatus'
 import { formatYuan, formatMga } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 
 const props = defineProps({ orderId: { type: String, required: true } })
 const order = ref(null)
@@ -56,7 +57,7 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
       <div class="card p-4">
         <p class="text-sm font-semibold text-gray-700 mb-2">Entana</p>
         <div v-for="(line, i) in order.items" :key="i" class="flex gap-3 py-2 border-b last:border-0 border-gray-100">
-          <img :src="line.image" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
+          <img :src="proxyImage(line.image)" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
             <p class="text-sm text-gray-800 line-clamp-2">{{ line.title }}</p>
             <p v-if="line.variantLabel" class="text-xs text-gray-400">{{ line.variantLabel }}</p>

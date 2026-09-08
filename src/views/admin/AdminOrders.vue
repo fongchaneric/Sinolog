@@ -4,6 +4,7 @@ import { ref as dbRef, onValue, off } from 'firebase/database'
 import { db } from '../../firebase'
 import { formatYuan } from '../../utils/currency'
 import { statusMeta, STATUS_META } from '../../utils/orderStatus'
+import { proxyImage } from '../../utils/image'
 
 const orders = ref([])
 const filter = ref('all')
@@ -49,7 +50,7 @@ const filtered = computed(() => (filter.value === 'all' ? orders.value : orders.
         :to="{ name: 'admin-order-detail', params: { orderId: o.id } }"
         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
       >
-        <img :src="o.items?.[0]?.image" class="w-12 h-12 rounded object-cover bg-gray-100" />
+        <img :src="proxyImage(o.items?.[0]?.image)" class="w-12 h-12 rounded object-cover bg-gray-100" />
         <div class="flex-1 min-w-0">
           <p class="text-sm text-gray-800 truncate">{{ o.userEmail }}</p>
           <p class="text-xs text-gray-400 truncate">Ref: {{ o.paymentReference }} · {{ o.paymentMethod }}</p>

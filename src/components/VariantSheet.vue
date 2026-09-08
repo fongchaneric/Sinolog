@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { formatYuan } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -89,7 +90,7 @@ function confirm() {
         <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500" @click="emit('close')">✕</button>
 
         <div class="p-4 flex gap-3 border-b border-gray-100">
-          <img :src="matchedSku?.image || product.image" class="w-20 h-20 rounded-lg object-cover bg-gray-100" />
+          <img :src="proxyImage(matchedSku?.image || product.image)" class="w-20 h-20 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
             <p class="text-brand font-bold text-xl">{{ formatYuan(unitPrice) }}</p>
             <p class="text-xs text-gray-400 mt-1">MOQ: {{ product.moq || 1 }}{{ product.unit || 'pcs' }}</p>
@@ -107,7 +108,7 @@ function confirm() {
               class="px-3 py-2 rounded-lg border text-sm flex items-center gap-2"
               :class="selected[group.name] === val.name ? 'border-brand text-brand bg-brand/5' : 'border-gray-200 text-gray-600'"
             >
-              <img v-if="val.image" :src="val.image" class="w-6 h-6 rounded object-cover" />
+              <img v-if="val.image" :src="proxyImage(val.image)" class="w-6 h-6 rounded object-cover" />
               {{ val.name }}
             </button>
           </div>

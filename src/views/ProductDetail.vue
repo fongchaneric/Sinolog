@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import DOMPurify from 'dompurify'
 import { getProductDetail } from '../utils/api'
 import { formatYuan, formatUsd, formatMga } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import VariantSheet from '../components/VariantSheet.vue'
@@ -75,7 +76,7 @@ onMounted(load)
     <div v-else-if="product" class="lg:grid lg:grid-cols-2 lg:gap-6 lg:p-6 tv:grid-cols-2">
       <div>
         <div class="aspect-square bg-gray-100 lg:rounded-xl overflow-hidden">
-          <img :src="product.images[activeImage] || product.image" class="w-full h-full object-cover" />
+          <img :src="proxyImage(product.images[activeImage] || product.image)" class="w-full h-full object-cover" />
         </div>
         <div v-if="product.images?.length > 1" class="flex gap-2 p-2 overflow-x-auto no-scrollbar">
           <button
@@ -85,7 +86,7 @@ onMounted(load)
             class="w-14 h-14 shrink-0 rounded border overflow-hidden"
             :class="i === activeImage ? 'border-brand' : 'border-gray-200'"
           >
-            <img :src="img" class="w-full h-full object-cover" />
+            <img :src="proxyImage(img)" class="w-full h-full object-cover" />
           </button>
         </div>
       </div>
