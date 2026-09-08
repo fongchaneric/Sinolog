@@ -50,7 +50,7 @@ async function onConfirm(payload) {
   if (sheetMode.value === 'cart') {
     await cartStore.addItem(payload, payload.quantity)
     sheetOpen.value = false
-    showToast('Ajouté au panier !')
+    showToast('Added to cart!')
   } else {
     await cartStore.addItem(payload, payload.quantity)
     sheetOpen.value = false
@@ -88,7 +88,7 @@ async function share() {
       await navigator.share(shareData)
     } else {
       await navigator.clipboard.writeText(shareData.url)
-      showToast('Lien copié !')
+      showToast('Link copied!')
     }
   } catch {
     // The user cancelling the native share sheet also lands here - not an error.
@@ -133,10 +133,10 @@ onMounted(load)
       </div>
     </div>
 
-    <div v-if="loading" class="p-6 text-center text-gray-400">Chargement des détails...</div>
+    <div v-if="loading" class="p-6 text-center text-gray-400">Loading details...</div>
     <div v-else-if="error" class="p-6 text-center text-gray-500">
       <p>{{ error }}</p>
-      <button class="btn-brand mt-4" @click="load">Réessayer</button>
+      <button class="btn-brand mt-4" @click="load">Try again</button>
     </div>
 
     <div v-else-if="product" class="lg:grid lg:grid-cols-2 lg:gap-6 lg:p-6 tv:grid-cols-2">
@@ -178,7 +178,7 @@ onMounted(load)
             <span v-if="product.priceMax && product.priceMax !== product.price" class="text-gray-400 text-sm">~{{ formatYuan(product.priceMax) }}</span>
             <span class="text-gray-400 text-sm">{{ formatUsd(product.price) }}</span>
           </div>
-          <p class="text-xs text-gray-400 mt-1">{{ formatMga(product.price) }} par {{ product.unit || 'pcs' }} (estimation, l'admin confirmera le prix final)</p>
+          <p class="text-xs text-gray-400 mt-1">{{ formatMga(product.price) }} per {{ product.unit || 'pcs' }} (estimate, the admin will confirm the final price)</p>
 
           <h1 class="text-base font-semibold text-gray-800 mt-3 leading-snug">{{ product.title }}</h1>
 
@@ -191,15 +191,15 @@ onMounted(load)
           </div>
 
           <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-sm">
-            <p class="text-gray-700 font-medium">🏪 {{ product.shopName || 'Fournisseur inconnu' }}</p>
+            <p class="text-gray-700 font-medium">🏪 {{ product.shopName || 'Unknown supplier' }}</p>
             <a v-if="product.link" :href="product.link" target="_blank" rel="noopener" class="text-brand text-xs shrink-0 flex items-center gap-1">
-              🔗 Voir la source
+              🔗 View source
             </a>
           </div>
         </div>
 
         <div v-if="product.priceTiers?.length" class="bg-white lg:rounded-xl p-4 mt-2">
-          <p class="text-sm font-semibold text-gray-700 mb-2">Prix selon la quantité</p>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Price by quantity</p>
           <div class="grid grid-cols-3 gap-2 text-center text-xs">
             <div v-for="(tier, i) in product.priceTiers" :key="i" class="border border-gray-200 rounded-lg py-2">
               <p class="font-bold text-brand">{{ formatYuan(tier.price) }}</p>
@@ -209,7 +209,7 @@ onMounted(load)
         </div>
 
         <div v-if="product.description" class="bg-white lg:rounded-xl p-4 mt-2">
-          <p class="text-sm font-semibold text-gray-700 mb-2">Description du produit</p>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Product description</p>
           <div class="text-xs text-gray-500 leading-relaxed prose-sm" v-html="safeDescription" />
         </div>
       </div>
@@ -226,10 +226,10 @@ onMounted(load)
         <svg class="w-5 h-5" :class="isFavorite ? 'fill-red-500' : 'fill-none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.727l-1.343-1.222C5.4 14.727 2 11.65 2 7.9 2 4.822 4.42 2.4 7.5 2.4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0116.5 2.4C19.58 2.4 22 4.822 22 7.9c0 3.75-3.4 6.827-8.657 11.627L12 20.727z" />
         </svg>
-        <span class="text-[10px]">Mes Produits</span>
+        <span class="text-[10px]">Save</span>
       </button>
-      <button class="flex-1 !py-2.5 text-sm rounded-full font-semibold text-white bg-brand-light active:scale-[0.98] transition" @click="openSheet('cart')">Ajouter au panier</button>
-      <button class="flex-1 !py-2.5 text-sm rounded-full font-semibold text-white bg-brand active:scale-[0.98] transition" @click="openSheet('buy')">Acheter maintenant</button>
+      <button class="flex-1 !py-2.5 text-sm rounded-full font-semibold text-white bg-brand-light active:scale-[0.98] transition" @click="openSheet('cart')">Add card</button>
+      <button class="flex-1 !py-2.5 text-sm rounded-full font-semibold text-white bg-brand active:scale-[0.98] transition" @click="openSheet('buy')">Order now</button>
     </div>
 
     <VariantSheet v-if="product" :open="sheetOpen" :product="product" :mode="sheetMode" @close="sheetOpen = false" @confirm="onConfirm" />

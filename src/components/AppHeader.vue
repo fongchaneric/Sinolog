@@ -28,10 +28,14 @@ function submitSearch() {
         <input
           v-model="keyword"
           type="search"
-          placeholder="Recherchez le produit que vous voulez..."
+          placeholder="Search for the product you want..."
           class="flex-1 min-w-0 text-sm outline-none bg-transparent"
         />
-        <button type="submit" class="btn-brand !py-1.5 !px-4 text-sm shrink-0">Rechercher</button>
+        <button type="submit" class="btn-brand !p-2.5 shrink-0" aria-label="Search">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+          </svg>
+        </button>
       </form>
     </div>
   </header>

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     const normalized = normalizeDetailResponse(raw)
     if (!normalized) {
-      res.status(404).json({ error: 'Produit introuvable' })
+      res.status(404).json({ error: 'Product not found' })
       return
     }
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
@@ -37,9 +37,9 @@ export default async function handler(req, res) {
       return
     }
     if (err.upstreamBusinessError) {
-      res.status(503).json({ error: "Achat impossible pour le moment - contactez l'administrateur", detail: err.message })
+      res.status(503).json({ error: 'Purchase unavailable right now - contact the administrator', detail: err.message })
       return
     }
-    res.status(502).json({ error: 'Impossible de récupérer les détails du produit', detail: err.message })
+    res.status(502).json({ error: 'Could not fetch the product details', detail: err.message })
   }
 }

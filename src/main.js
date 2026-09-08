@@ -31,9 +31,9 @@ bootstrap().catch((err) => {
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:-apple-system,sans-serif;background:#fff7ed;box-sizing:border-box;">
       <div style="max-width:480px;text-align:center;">
         <p style="font-size:40px;margin:0 0 12px;">⚠️</p>
-        <h1 style="font-size:18px;color:#c2410c;margin:0 0 10px;">Sinolog n'a pas pu démarrer</h1>
+        <h1 style="font-size:18px;color:#c2410c;margin:0 0 10px;">Sinolog failed to start</h1>
         <p style="font-size:13px;color:#7c2d12;line-height:1.6;white-space:pre-wrap;">${message.innerHTML}</p>
-        <p style="font-size:12px;color:#9a3412;margin-top:16px;">Vérifiez les Environment Variables (Firebase) dans Vercel Project Settings, puis redéployez.</p>
+        <p style="font-size:12px;color:#9a3412;margin-top:16px;">Check the Environment Variables (Firebase) in Vercel Project Settings, then redeploy.</p>
       </div>
     </div>
   `

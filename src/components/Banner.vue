@@ -1,8 +1,8 @@
 <script setup>
 const slides = [
   { title: 'Black Friday Hot Sales', subtitle: 'Store-wise 200-10', bg: 'from-[#2b0000] via-[#3d0d0d] to-[#5c1010]' },
-  { title: 'Achetez directement en Chine', subtitle: "Nous nous occupons de l'achat et de l'expédition", bg: 'from-brand-dark via-brand to-brand-light' },
-  { title: 'Free Cross-Border Shipping', subtitle: 'Sur votre première commande', bg: 'from-[#1a1a2e] via-[#16213e] to-[#0f3460]' }
+  { title: 'Shop Directly from China', subtitle: 'We handle the buying and the shipping', bg: 'from-brand-dark via-brand to-brand-light' },
+  { title: 'Free Cross-Border Shipping', subtitle: 'On your first order', bg: 'from-[#1a1a2e] via-[#16213e] to-[#0f3460]' }
 ]
 </script>
 
