@@ -24,6 +24,19 @@ const sheetOpen = ref(false)
 const sheetMode = ref('cart')
 const toast = ref('')
 const skuCopied = ref(false)
+const mainScroll = ref(null)
+
+function goToImage(i) {
+  activeImage.value = i
+  const el = mainScroll.value
+  if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
+}
+
+function onMainScroll() {
+  const el = mainScroll.value
+  if (!el || !el.clientWidth) return
+  activeImage.value = Math.round(el.scrollLeft / el.clientWidth)
+}
 
 async function load() {
   loading.value = true
@@ -142,8 +155,19 @@ onMounted(load)
     <div v-else-if="product" class="lg:grid lg:grid-cols-2 lg:gap-6 lg:p-6 tv:grid-cols-2">
       <div>
         <div class="relative aspect-square bg-gray-100 lg:rounded-xl overflow-hidden">
-          <img :src="proxyImage(product.images[activeImage] || product.image)" class="w-full h-full object-cover" />
-          <span v-if="product.images?.length" class="absolute bottom-2 left-2 bg-black/60 text-white text-[11px] px-2 py-1 rounded-full flex items-center gap-1">
+          <div
+            ref="mainScroll"
+            @scroll="onMainScroll"
+            class="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+          >
+            <img
+              v-for="(img, i) in (product.images?.length ? product.images : [product.image])"
+              :key="i"
+              :src="proxyImage(img)"
+              class="w-full h-full object-cover shrink-0 snap-start snap-always"
+            />
+          </div>
+          <span v-if="product.images?.length > 1" class="absolute bottom-2 left-2 bg-black/60 text-white text-[11px] px-2 py-1 rounded-full flex items-center gap-1 pointer-events-none">
             🖼️ {{ activeImage + 1 }}/{{ product.images.length }}
           </span>
         </div>
@@ -151,7 +175,7 @@ onMounted(load)
           <button
             v-for="(img, i) in product.images"
             :key="i"
-            @click="activeImage = i"
+            @click="goToImage(i)"
             class="w-14 h-14 shrink-0 rounded border overflow-hidden"
             :class="i === activeImage ? 'border-brand' : 'border-gray-200'"
           >

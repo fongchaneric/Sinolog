@@ -14,13 +14,25 @@ const sentinel = ref(null)
 let observer = null
 let keywordCursor = 0
 
-const categories = ref([])
-const activeCategory = ref(null) // null = "All"
+// Real categories from CJ Dropshipping's /product/getCategory when that
+// loads something usable; otherwise this reliable fixed list keeps the
+// filter row from ever showing empty (translated from the original
+// Chinese quick-search keywords).
+const FALLBACK_CHIPS = [
+  { type: 'keyword', value: 'phone case', label: 'Phone Case' },
+  { type: 'keyword', value: 'keychain', label: 'Keychain' },
+  { type: 'keyword', value: 'usb cable', label: 'USB Cable' },
+  { type: 'keyword', value: 'memory card', label: 'Memory Card' },
+  { type: 'keyword', value: 'bluetooth earphone', label: 'Bluetooth Earphone' },
+  { type: 'keyword', value: 'power bank', label: 'Power Bank' }
+]
+const chips = ref(FALLBACK_CHIPS)
+const activeChip = ref(null) // null = "All"
 
 // Leans the trending grid toward the buyer's own last few searches once
 // they have any, but not exclusively - every third batch falls back to
 // the server's own generic default keyword so the grid isn't 100% just
-// their history. Only applies when browsing "All" (no category picked).
+// their history. Only applies when browsing "All" (no chip picked).
 function nextKeyword() {
   const recent = getRecentSearches()
   if (!recent.length) return undefined
@@ -38,9 +50,11 @@ async function loadBatch(isInitial) {
     loadingMore.value = true
   }
   try {
-    const data = activeCategory.value
-      ? await getTrendingProducts({ categoryId: activeCategory.value })
-      : await getTrendingProducts({ keyword: nextKeyword() })
+    const data = !activeChip.value
+      ? await getTrendingProducts({ keyword: nextKeyword() })
+      : activeChip.value.type === 'category'
+        ? await getTrendingProducts({ categoryId: activeChip.value.value })
+        : await getTrendingProducts({ keyword: activeChip.value.value })
     products.value = isInitial ? data.items : [...products.value, ...data.items]
   } catch (e) {
     if (isInitial) error.value = e.message
@@ -52,9 +66,10 @@ async function loadBatch(isInitial) {
   }
 }
 
-function selectCategory(id) {
-  if (activeCategory.value === id) return
-  activeCategory.value = id
+function selectChip(chip) {
+  const nextValue = chip ? chip.value : null
+  if ((activeChip.value?.value ?? null) === nextValue) return
+  activeChip.value = chip
   products.value = []
   loadBatch(true)
 }
@@ -62,10 +77,11 @@ function selectCategory(id) {
 async function loadCategories() {
   try {
     const data = await getCategories()
-    categories.value = data.categories || []
+    if (data.categories?.length) {
+      chips.value = data.categories.map((c) => ({ type: 'category', value: c.id, label: c.name }))
+    }
   } catch {
-    // The category row is a nice-to-have filter - a failure here shouldn't
-    // block the trending grid itself from loading.
+    // Keep the reliable fallback chips - a failure here shouldn't leave the filter row empty.
   }
 }
 
@@ -96,22 +112,22 @@ onUnmounted(() => {
       <span>›</span>
     </div>
 
-    <div v-if="categories.length" class="flex gap-2 px-2 pt-3 overflow-x-auto no-scrollbar">
+    <div class="flex gap-2 px-2 pt-3 overflow-x-auto no-scrollbar">
       <button
-        @click="selectCategory(null)"
+        @click="selectChip(null)"
         class="shrink-0 text-xs rounded-full px-3 py-1.5 border"
-        :class="!activeCategory ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
+        :class="!activeChip ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
       >
         All
       </button>
       <button
-        v-for="c in categories"
-        :key="c.id"
-        @click="selectCategory(c.id)"
+        v-for="c in chips"
+        :key="c.value"
+        @click="selectChip(c)"
         class="shrink-0 text-xs rounded-full px-3 py-1.5 border"
-        :class="activeCategory === c.id ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
+        :class="activeChip?.value === c.value ? 'bg-brand text-white border-brand' : 'bg-white border-gray-200 text-gray-600'"
       >
-        {{ c.name }}
+        {{ c.label }}
       </button>
     </div>
 
