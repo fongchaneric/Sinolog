@@ -24,6 +24,10 @@ export default async function handler(req, res) {
     res.status(200).json(normalized)
   } catch (err) {
     console.error('product detail error', err)
+    if (err.rateLimited) {
+      res.status(429).json({ error: err.message })
+      return
+    }
     res.status(502).json({ error: 'Tsy nahazo ny antsipiriany momba ilay entana', detail: err.message })
   }
 }

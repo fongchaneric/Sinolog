@@ -18,10 +18,14 @@ export default async function handler(req, res) {
   try {
     const raw = await searchItems(keyword, page)
     const normalized = normalizeSearchResponse(raw, keyword, page)
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300')
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
     res.status(200).json(normalized)
   } catch (err) {
     console.error('search error', err)
+    if (err.rateLimited) {
+      res.status(429).json({ error: err.message })
+      return
+    }
     res.status(502).json({ error: 'Tsy nahazo ny lisitry ny entana', detail: err.message })
   }
 }
