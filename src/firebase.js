@@ -3,13 +3,26 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getDatabase } from 'firebase/database'
 
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
+const apiKey = import.meta.env.VITE_FIREBASE_API_KEY
+const databaseURL = import.meta.env.VITE_FIREBASE_DATABASE_URL
+
+const missing = []
+if (!apiKey) missing.push('VITE_FIREBASE_API_KEY (or FIREBASE_WEB_API_KEY)')
+if (!projectId) missing.push('VITE_FIREBASE_PROJECT_ID (or FIREBASE_PROJECT_ID)')
+if (!databaseURL) missing.push('VITE_FIREBASE_DATABASE_URL (or FIREBASE_DATABASE_URL)')
+if (missing.length) {
+  throw new Error(
+    `Tsy voafefy ny Firebase: tsy misy ny variable manaraka - ${missing.join(', ')}. ` +
+      'Ampidiro ao amin\'ny Environment Variables (Vercel) na .env.local ireo, dia atsofohy indray ny deploy.'
+  )
+}
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || (projectId ? `${projectId}.firebaseapp.com` : undefined),
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
+  databaseURL,
   projectId,
-  storageBucket: projectId ? `${projectId}.appspot.com` : undefined
+  storageBucket: `${projectId}.appspot.com`
 }
 
 export const firebaseApp = initializeApp(firebaseConfig)
