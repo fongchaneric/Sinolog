@@ -28,8 +28,8 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
 
 <template>
   <div class="max-w-2xl mx-auto px-3 py-4">
-    <div v-if="!loaded" class="text-center text-gray-400 py-16">Eo am-pitadiavana...</div>
-    <div v-else-if="!order" class="text-center text-gray-400 py-16">Tsy hita ilay commande</div>
+    <div v-if="!loaded" class="text-center text-gray-400 py-16">Recherche en cours...</div>
+    <div v-else-if="!order" class="text-center text-gray-400 py-16">Commande introuvable</div>
 
     <div v-else class="space-y-3">
       <div class="card p-4">
@@ -55,7 +55,7 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Entana</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Produits</p>
         <div v-for="(line, i) in order.items" :key="i" class="flex gap-3 py-2 border-b last:border-0 border-gray-100">
           <img :src="proxyImage(line.image)" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
@@ -65,7 +65,7 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
           </div>
         </div>
         <div class="flex justify-between font-bold pt-2">
-          <span class="text-sm">Totaly</span>
+          <span class="text-sm">Total</span>
           <div class="text-right">
             <p class="text-brand">{{ formatYuan(order.totalYuan) }}</p>
             <p class="text-xs text-gray-400 font-normal">{{ formatMga(order.totalYuan) }}</p>
@@ -74,12 +74,12 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Payment</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Paiement</p>
         <div class="text-sm text-gray-600 space-y-1">
-          <p>Fomba: <span class="font-medium capitalize">{{ order.paymentMethod }}</span></p>
-          <p>Numero nandefasana: <span class="font-medium">{{ order.senderPhone }}</span></p>
-          <p>Reference: <span class="font-medium">{{ order.paymentReference }}</span></p>
-          <p v-if="order.deliveryAddress">Adiresy: <span class="font-medium">{{ order.deliveryAddress }}</span></p>
+          <p>Méthode : <span class="font-medium capitalize">{{ order.paymentMethod }}</span></p>
+          <p>Numéro d'envoi : <span class="font-medium">{{ order.senderPhone }}</span></p>
+          <p>Référence : <span class="font-medium">{{ order.paymentReference }}</span></p>
+          <p v-if="order.deliveryAddress">Adresse : <span class="font-medium">{{ order.deliveryAddress }}</span></p>
         </div>
       </div>
     </div>

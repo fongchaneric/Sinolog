@@ -30,11 +30,11 @@ const estimatedMga = computed(() => Math.round(cartStore.totalYuan * 650))
 async function submit() {
   error.value = ''
   if (!cartStore.lines.length) {
-    error.value = 'Foana ny sobikanao'
+    error.value = 'Votre panier est vide'
     return
   }
   if (!reference.value.trim() || !senderPhone.value.trim()) {
-    error.value = 'Feno ny Reference sy ny Numero nandefasana ny vola'
+    error.value = 'Renseignez la référence et le numéro d\'envoi'
     return
   }
   submitting.value = true
@@ -72,26 +72,26 @@ async function submit() {
 
 <template>
   <div class="max-w-2xl mx-auto px-3 py-4 pb-28 space-y-3">
-    <h1 class="text-lg font-bold text-gray-800 px-1">Fandoavam-bola</h1>
+    <h1 class="text-lg font-bold text-gray-800 px-1">Paiement</h1>
 
     <div class="card p-4">
-      <p class="text-sm font-semibold text-gray-700 mb-2">Fintina ny commande</p>
+      <p class="text-sm font-semibold text-gray-700 mb-2">Résumé de la commande</p>
       <div v-for="line in cartStore.lines" :key="line.itemId + line.skuId" class="flex justify-between text-sm py-1">
         <span class="text-gray-600 truncate pr-2">{{ line.title }} × {{ line.quantity }}</span>
         <span class="text-gray-800 shrink-0">{{ formatYuan(line.price * line.quantity) }}</span>
       </div>
       <div class="border-t border-gray-100 mt-2 pt-2 flex justify-between font-bold">
-        <span>Totaly</span>
+        <span>Total</span>
         <div class="text-right">
           <p class="text-brand">{{ formatYuan(cartStore.totalYuan) }}</p>
           <p class="text-xs text-gray-400 font-normal">{{ formatMga(cartStore.totalYuan) }}</p>
         </div>
       </div>
-      <p class="text-[11px] text-gray-400 mt-1">* Tombana ihany io, ny sarany fandefasana sy serivisy dia homen'ny admin fanamafisana aorian'ny commande.</p>
+      <p class="text-[11px] text-gray-400 mt-1">* Estimation uniquement — les frais de livraison et de service seront confirmés par l'admin après la commande.</p>
     </div>
 
     <div class="card p-4">
-      <p class="text-sm font-semibold text-gray-700 mb-3">Safidio ny fomba fandoavana</p>
+      <p class="text-sm font-semibold text-gray-700 mb-3">Choisissez le mode de paiement</p>
       <div class="grid grid-cols-3 gap-2">
         <button
           v-for="m in PAYMENT_METHODS"
@@ -109,15 +109,15 @@ async function submit() {
 
       <div class="mt-3 bg-gray-50 rounded-lg p-3 flex items-center justify-between">
         <div>
-          <p class="text-xs text-gray-400">Alefaso vola amin'ity Numero {{ selectedMethod.label }} ity</p>
+          <p class="text-xs text-gray-400">Envoyez le paiement à ce numéro {{ selectedMethod.label }}</p>
           <p class="text-lg font-bold text-gray-800 tracking-wide">{{ selectedMethod.number }}</p>
         </div>
       </div>
 
       <div class="mt-3 space-y-2">
-        <input v-model="senderPhone" type="tel" placeholder="Ny numero nandefasanao ny vola" class="input-field" />
-        <input v-model="reference" type="text" placeholder="Reference nanaovana ny payment" class="input-field" />
-        <textarea v-model="address" rows="2" placeholder="Adiresy fandefasana (raha ilaina)" class="input-field resize-none" />
+        <input v-model="senderPhone" type="tel" placeholder="Le numéro depuis lequel vous avez envoyé l'argent" class="input-field" />
+        <input v-model="reference" type="text" placeholder="Référence du paiement" class="input-field" />
+        <textarea v-model="address" rows="2" placeholder="Adresse de livraison (si nécessaire)" class="input-field resize-none" />
       </div>
     </div>
 
@@ -125,7 +125,7 @@ async function submit() {
 
     <div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 px-4 py-3 max-w-2xl mx-auto">
       <button class="btn-brand w-full !py-3" :disabled="submitting" @click="submit">
-        {{ submitting ? 'Eo am-pandefasana...' : `Hanamafy ny commande — ${formatYuan(cartStore.totalYuan)}` }}
+        {{ submitting ? 'Envoi en cours...' : `Confirmer la commande — ${formatYuan(cartStore.totalYuan)}` }}
       </button>
     </div>
   </div>

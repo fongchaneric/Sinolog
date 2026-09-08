@@ -65,7 +65,7 @@ export function normalizeItem(entry) {
 
   return {
     itemId: itemId ? String(itemId) : null,
-    title: title || '(anarana tsy fantatra)',
+    title: title || '(nom inconnu)',
     image: image || '',
     price: usdToCny(min),
     priceMax: max !== null && max !== min ? usdToCny(max) : null,

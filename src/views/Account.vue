@@ -11,8 +11,9 @@ async function logout() {
 }
 
 const menu = [
-  { label: 'Ny Commande-ko', icon: '📦', to: { name: 'orders' } },
-  { label: 'Sobika', icon: '🛒', to: { name: 'cart' } }
+  { label: 'Mes commandes', icon: '📦', to: { name: 'orders' } },
+  { label: 'Mes Produits', icon: '❤️', to: { name: 'favorites' } },
+  { label: 'Panier', icon: '🛒', to: { name: 'cart' } }
 ]
 </script>
 
@@ -23,7 +24,7 @@ const menu = [
         {{ (authStore.user?.displayName || authStore.user?.email || '?')[0].toUpperCase() }}
       </div>
       <div class="min-w-0">
-        <p class="font-bold text-gray-800 truncate">{{ authStore.user?.displayName || 'Mpividy' }}</p>
+        <p class="font-bold text-gray-800 truncate">{{ authStore.user?.displayName || 'Client' }}</p>
         <p class="text-sm text-gray-400 truncate">{{ authStore.user?.email }}</p>
       </div>
     </div>
@@ -36,6 +37,6 @@ const menu = [
       </router-link>
     </div>
 
-    <button @click="logout" class="w-full mt-4 btn-outline !text-red-500 !border-red-200 !py-3">Hivoaka</button>
+    <button @click="logout" class="w-full mt-4 btn-outline !text-red-500 !border-red-200 !py-3">Se déconnecter</button>
   </div>
 </template>

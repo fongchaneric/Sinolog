@@ -37,8 +37,8 @@ const soldLabel = computed(() => {
       <div class="flex items-baseline gap-1.5">
         <span class="text-brand font-bold text-base">{{ formatYuan(product.price) }}</span>
         <span v-if="product.priceMax && product.priceMax !== product.price" class="text-gray-400 text-xs">~{{ formatYuan(product.priceMax) }}</span>
+        <span class="text-[11px] text-gray-400">{{ formatUsd(product.price) }}</span>
       </div>
-      <span class="text-[11px] text-gray-400">{{ formatUsd(product.price) }}</span>
       <div class="flex items-center justify-between mt-auto pt-1 text-[11px] text-gray-400">
         <span class="flex items-center gap-0.5" v-if="product.rating">
           <svg class="w-3 h-3 text-brand fill-brand" viewBox="0 0 20 20"><path d="M10 1l2.6 5.9L19 7.6l-4.5 4.2L15.8 19 10 15.6 4.2 19l1.3-7.2L1 7.6l6.4-.7z"/></svg>
