@@ -15,6 +15,14 @@ export default async function handler(req, res) {
 
   try {
     const raw = await getItemDetail(itemId)
+
+    // Same temporary diagnostic escape hatch as api/search.js - see there.
+    if (req.query.raw === '1') {
+      res.setHeader('Cache-Control', 'no-store')
+      res.status(200).json(raw)
+      return
+    }
+
     const normalized = normalizeDetailResponse(raw)
     if (!normalized) {
       res.status(404).json({ error: 'Tsy hita ilay entana' })

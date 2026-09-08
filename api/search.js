@@ -17,6 +17,17 @@ export default async function handler(req, res) {
 
   try {
     const raw = await searchItems(keyword, page)
+
+    // Temporary diagnostic escape hatch: ?raw=1 returns JustOneAPI's
+    // untouched response so the field-name mapping in _lib/normalize.js
+    // can be corrected against the real payload shape. Safe to keep - it
+    // never touches the token, only what JustOneAPI already sent back.
+    if (req.query.raw === '1') {
+      res.setHeader('Cache-Control', 'no-store')
+      res.status(200).json(raw)
+      return
+    }
+
     const normalized = normalizeSearchResponse(raw, keyword, page)
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
     res.status(200).json(normalized)

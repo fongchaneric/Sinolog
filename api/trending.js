@@ -5,9 +5,9 @@ import { normalizeSearchResponse } from './_lib/normalize.js'
 // Kept short and fetched sequentially with spacing (below) because
 // JustOneAPI enforces a strict per-second rate limit - firing several
 // searches at once from the client used to trip "TOO FAST" (429) errors.
-const KEYWORDS = ['手机壳', '钥匙扣', '数据线', '蓝牙耳机']
-const ITEMS_PER_KEYWORD = 6
-const SPACING_MS = 1100
+const KEYWORDS = ['手机壳', '钥匙扣', '数据线']
+const ITEMS_PER_KEYWORD = 8
+const SPACING_MS = 1500
 const PER_CALL_TIMEOUT_MS = 3500
 // Vercel's default function timeout is 10s on the Hobby plan (higher plans
 // can raise it via vercel.json, but this must still work on the default).
