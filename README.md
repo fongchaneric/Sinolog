@@ -1,11 +1,11 @@
 # Sinolog
 
 Site e-commerce "proxy-purchasing" inspiré de 1688 / Taobao / Pinduoduo :
-les visiteurs parcourent et achètent des produits 1688 directement sur le
-site (personne d'autre ne vend), paient par Mobile Money (Airtel Money,
-Orange Money, Mvola), et c'est l'administrateur (`fongchaneric1@gmail.com`)
-qui effectue l'achat réel auprès du fournisseur sur 1688 puis organise
-l'expédition.
+les visiteurs parcourent et achètent des produits sourcés depuis la Chine
+(catalogue CJ Dropshipping) directement sur le site (personne d'autre ne
+vend), paient par Mobile Money (Airtel Money, Orange Money, Mvola), et
+c'est l'administrateur (`fongchaneric1@gmail.com`) qui effectue l'achat
+réel auprès du fournisseur puis organise l'expédition.
 
 Stack : **Vue 3 + Vite + Tailwind CSS** (frontend), **Node.js / Vercel
 Serverless Functions** (`api/`), **Firebase** (Authentication + Realtime
@@ -13,11 +13,10 @@ Database), déployé sur **Vercel**, code hébergé sur **GitHub**.
 
 ## Fonctionnalités
 
-- Recherche & liste de produits issus de l'API RapidAPI "Taobao 1688 API"
-  (`taobao-1688-api1.p.rapidapi.com`), avec image, titre, prix, ventes,
-  note, boutique, lien 1688 et Product ID.
-- Page produit avec galerie d'images, sélecteur de variantes
-  (couleur/capacité...) et paliers de prix par quantité, façon 1688.
+- Recherche & liste de produits issus de l'API **CJ Dropshipping**
+  (`developers.cjdropshipping.com`), avec image, titre, prix, boutique et
+  Product ID.
+- Page produit avec galerie d'images et sélecteur de variantes, façon 1688.
 - Panier, checkout avec choix Airtel Money / Orange Money / Mvola, saisie
   de la référence de paiement + numéro d'envoi.
 - Suivi de commande (statuts : en attente → confirmé → achat en cours →
@@ -41,10 +40,10 @@ src/                 Application Vue (SPA)
   utils/              Appels API, formatage devise, statuts de commande
   firebase.js         Init Firebase côté client
 api/                 Fonctions serverless Vercel (Node.js)
-  search.js          GET /api/search?keyword=...  -> proxy RapidAPI /v53/search (recherche)
-  product.js         GET /api/product?itemId=...   -> proxy RapidAPI /v53/detail (détail)
+  search.js          GET /api/search?keyword=...  -> proxy CJ Dropshipping /product/list (recherche)
+  product.js         GET /api/product?itemId=...   -> proxy CJ Dropshipping /product/query (détail)
   orders/update-status.js  POST, admin uniquement -> change le statut d'une commande
-  _lib/               firebase-admin, appel RapidAPI, normalisation des réponses
+  _lib/               firebase-admin, authentification + appel CJ Dropshipping, normalisation des réponses, cache de secours
 database.rules.json  Règles de sécurité Firebase Realtime Database
 ```
 
@@ -81,14 +80,14 @@ Environment Variables** pour la production :
 | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_DATABASE_URL`, `VITE_FIREBASE_AUTH_DOMAIN` | Firebase côté client (visible dans le navigateur, normal pour Firebase) |
 | `VITE_ADMIN_EMAIL` | E-mail admin utilisé côté client pour la redirection (défaut `fongchaneric1@gmail.com`) |
 | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_DATABASE_URL` | SDK Admin Firebase, utilisé uniquement dans `api/` pour vérifier l'identité de l'admin et modifier les commandes en toute sécurité |
-| `RAPIDAPI_KEY`, `RAPIDAPI_HOST` | Identifiants RapidAPI (Taobao 1688 API, host `taobao-1688-api1.p.rapidapi.com`) — **jamais exposés au navigateur**, utilisés uniquement dans `api/search.js` et `api/product.js` |
+| `CJ_API_KEY`, `CJ_API_EMAIL`, `CJ_API_BASE_URL` | Identifiants CJ Dropshipping — **jamais exposés au navigateur**, utilisés uniquement dans `api/_lib/cjAuth.js` (connexion) et `api/_lib/cjdropshipping.js` (appels produits) |
 | `ADMIN_EMAIL` | E-mail admin côté serveur (défaut `fongchaneric1@gmail.com`) |
 
-⚠️ **Important** : `RAPIDAPI_KEY` et les identifiants du compte de
-service Firebase (`FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY`) sont
-des secrets. Ne jamais les committer dans le dépôt — ils ne doivent
-exister que dans les variables d'environnement Vercel / `.env.local`
-(déjà ignoré par git).
+⚠️ **Important** : `CJ_API_KEY` et les identifiants du compte de service
+Firebase (`FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY`) sont des
+secrets. Ne jamais les committer dans le dépôt — ils ne doivent exister
+que dans les variables d'environnement Vercel / `.env.local` (déjà
+ignoré par git).
 
 ## Développement local
 
@@ -115,20 +114,32 @@ vercel dev
 4. Déployer. Les fonctions `api/*.js` sont automatiquement publiées comme
    fonctions serverless.
 
-## Remarque sur le format de réponse RapidAPI
+## Remarque sur le format de réponse CJ Dropshipping
 
-L'accès réseau à `taobao-1688-api1.p.rapidapi.com` n'était pas disponible
-dans l'environnement de développement utilisé pour créer ce projet : seuls
-le host, les chemins (`/v53/search`, `/v53/detail`) et les paramètres
-(`keyword`/`page`, `itemId`) ont pu être confirmés, pas le format exact du
-JSON renvoyé. Le mapping des champs de réponse (`api/_lib/normalize.js`)
-a donc été écrit de façon défensive, en testant plusieurs noms de champs
-courants (`itemId`/`num_iid`/`offerId`, `pic_url`/`image`, etc.) et une
-recherche générique du premier tableau de produits dans la réponse JSON.
-Utiliser `api/search?keyword=...&raw=1` ou `api/product?itemId=...&raw=1`
-pour inspecter la réponse brute réelle : si le format diffère, il suffit
-d'ajouter les bons noms de champs dans les listes `candidates` de ce
-fichier — aucune autre partie du code n'a besoin de changer.
+L'accès réseau à `developers.cjdropshipping.com` n'était pas disponible
+dans l'environnement de développement utilisé pour créer ce projet : les
+chemins (`/authentication/getAccessToken`, `/product/list`,
+`/product/query`) et le flux d'authentification (connexion par e-mail +
+clé API pour obtenir un `accessToken`, valable ~15 jours, à renouveler via
+`refreshToken`) suivent la documentation officielle de CJ telle
+qu'elle a pu être mémorisée, mais n'ont pas pu être testés en direct. Le
+mapping des champs de réponse (`api/_lib/normalize.js`) reste donc
+défensif (plusieurs noms de champs candidats par valeur). Utiliser
+`api/search?keyword=...&raw=1` ou `api/product?itemId=...&raw=1` pour
+inspecter la réponse brute réelle après déploiement : si le format
+diffère, il suffit d'ajouter les bons noms de champs dans les listes
+`candidates` de ce fichier, ou de corriger les chemins dans
+`api/_lib/cjAuth.js` / `api/_lib/cjdropshipping.js` — aucune autre partie
+du code n'a besoin de changer.
+
+Les prix CJ sont en USD ; ils sont convertis vers un équivalent CNY dans
+`api/_lib/normalize.js` (taux fixe `CJ_USD_TO_CNY`) pour rester compatibles
+avec `src/utils/currency.js`, qui affiche un prix de base en Yuan.
+
+Les mots-clés de la grille "tendances" de l'accueil (`api/trending.js`)
+sont désormais en anglais (CJ recherche par nom de produit anglais),
+contrairement aux mots-clés chinois utilisés avec le fournisseur
+précédent.
 
 ## Taux de conversion CNY → Ariary
 

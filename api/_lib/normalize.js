@@ -1,12 +1,9 @@
-// The upstream (RapidAPI's taobao-1688-api1, /v53/search and /v53/detail)
-// doesn't have reachable field-level documentation, so these helpers stay
-// defensive: every field is looked up under a list of candidate names,
-// including both plain Taobao/1688 scraper conventions (num_iid, pic_url,
-// promotion_price, seller_nick...) and the "smart_ui_offer" cell shape seen
-// from a previous provider (offerId, priceInfo, odPicUrl, shop.text...),
-// in case either turns up in the real response. Use api/search?raw=1 or
-// api/product?raw=1 to inspect the actual payload and correct any mapping
-// that turns out wrong.
+// Normalizes CJ Dropshipping (developers.cjdropshipping.com) API responses
+// into the flat item/detail shape the rest of the app expects. Field names
+// here follow CJ's documented v2 API shape as best recalled, not a
+// confirmed live payload - api/search.js and api/product.js keep a ?raw=1
+// escape hatch to inspect the real response and correct anything that
+// turns out different after deploy.
 
 function pick(obj, candidates) {
   if (!obj || typeof obj !== 'object') return undefined
@@ -31,179 +28,21 @@ function stripHtml(value) {
     .trim()
 }
 
-// Sales/booking counters on 1688 are Chinese-formatted strings like
-// "全网10万+件" (100,000+) or "已售2800+件" (2,800+) - extract a plain number.
-function parseChineseCount(text) {
-  if (!text) return null
-  const str = String(text)
-  const wan = str.match(/([\d.]+)\s*万/)
-  if (wan) return Math.round(parseFloat(wan[1]) * 10000)
-  const num = str.match(/[\d,]+/)
-  if (num) return parseInt(num[0].replace(/,/g, ''), 10)
-  return null
+// CJ quotes prices in USD; the rest of the app (formatYuan/formatUsd/
+// formatMga in src/utils/currency.js) is built around a CNY base price, so
+// convert once here rather than reworking every component. 7.2 keeps the
+// round trip back through formatUsd's own CNY->USD factor (0.14) close to
+// the original USD amount.
+const CJ_USD_TO_CNY = 7.2
+function usdToCny(usd) {
+  return usd === null || usd === undefined ? null : usd * CJ_USD_TO_CNY
 }
 
-// First wholesale tier's quantity string (e.g. "50~499个", "≥1000个") gives
-// a reasonable minimum order quantity when no explicit MOQ field exists.
-function parseMoqFromTier(quantityText) {
-  if (!quantityText) return null
-  const match = String(quantityText).match(/[\d.]+/)
-  return match ? parseInt(match[0], 10) : null
-}
-
-function findFirstArray(node, depth = 0) {
-  if (depth > 6 || node === null || typeof node !== 'object') return null
-  if (Array.isArray(node)) {
-    if (node.length && typeof node[0] === 'object') return node
-    return null
-  }
-  const priorityKeys = ['items', 'item_list', 'itemList', 'list', 'result_list', 'resultList', 'goods', 'data']
-  for (const key of priorityKeys) {
-    if (node[key]) {
-      const found = findFirstArray(node[key], depth + 1)
-      if (found) return found
-    }
-  }
-  for (const value of Object.values(node)) {
-    const found = findFirstArray(value, depth + 1)
-    if (found) return found
-  }
-  return null
-}
-
-export function normalizeItem(rawEntry) {
-  if (!rawEntry || typeof rawEntry !== 'object') return null
-
-  // Unwrap the 1688 "smart_ui_offer" cell wrapper when present.
-  const inner = rawEntry.data
-  const raw = inner && typeof inner === 'object' && (inner.offerId || inner.title) ? inner : rawEntry
-
-  const itemId = pick(raw, ['offerId', 'itemId', 'item_id', 'num_iid', 'numIid', 'id', 'productId'])
-  const rawTitle = pick(raw, ['title', 'subject', 'item_title', 'itemTitle', 'name', 'productName'])
-  const title = stripHtml(rawTitle)
-
-  let image = pick(raw, ['odPicUrl', 'image', 'imgUrl', 'img_url', 'pic_url', 'picUrl', 'pic', 'main_image', 'mainImage', 'image_url', 'imageUrl'])
-  if (!image) {
-    const offerPic = pick(raw, ['offerPicUrl', 'pictureUrl'])
-    if (offerPic) image = String(offerPic).split(',')[0].trim()
-  }
-
-  const priceInfo = raw.priceInfo && typeof raw.priceInfo === 'object' ? raw.priceInfo : null
-  const rawPrice = priceInfo
-    ? pick(priceInfo, ['price'])
-    : pick(raw, ['price', 'promotion_price', 'promotionPrice', 'discount_price', 'min_price', 'view_price', 'zk_final_price'])
-
-  const afterPriceText = raw.afterPrice && typeof raw.afterPrice === 'object' ? pick(raw.afterPrice, ['text']) : null
-  const sales = parseChineseCount(afterPriceText) ?? toNumber(pick(raw, ['bookedCount', 'sales', 'sold', 'sold_quantity', 'trade_count', 'sales_count', 'volume']))
-
-  const tradeService = raw.shopAddition?.tradeService
-  const rating = toNumber(tradeService ? pick(tradeService, ['compositeNewScore', 'goodsScore']) : pick(raw, ['rating', 'score', 'star']))
-
-  const shopName =
-    (raw.shop && typeof raw.shop === 'object' ? pick(raw.shop, ['text']) : null) ||
-    pick(raw, ['shop_name', 'shopName', 'seller_nick', 'nick', 'company_name', 'company'])
-
-  const link = pick(raw, ['linkUrl', 'detail_url', 'detailUrl', 'url', 'landing_url', 'item_url', 'click_url', 'product_url'])
-
-  const quantityPrices = raw.shopAddition?.quantityPrices
-  const moqFromTier = Array.isArray(quantityPrices) && quantityPrices.length ? parseMoqFromTier(pick(quantityPrices[0], ['quantity'])) : null
-  const moq = pick(raw, ['moq', 'min_order_quantity', 'minOrderQuantity']) || moqFromTier
-
-  const unit = pick(raw, ['unit', 'unitName']) || 'pcs'
-
-  if (!itemId && !title) return null
-
-  return {
-    itemId: itemId ? String(itemId) : null,
-    title: title || '(anarana tsy fantatra)',
-    image: image || '',
-    price: toNumber(rawPrice),
-    priceMax: null,
-    sales,
-    rating,
-    shopName: shopName || '',
-    link: link || (itemId ? `https://detail.1688.com/offer/${itemId}.html` : ''),
-    moq: toNumber(moq) || 1,
-    unit
-  }
-}
-
-export function normalizeSearchResponse(raw, keyword, page) {
-  const array = findFirstArray(raw) || []
-  const items = array.map(normalizeItem).filter(Boolean)
-  const total = raw?.data?.data?.found ?? pick(raw, ['total', 'totalResults', 'total_results', 'totalCount', 'total_count', 'total_results_count'])
-  return {
-    keyword,
-    page: Number(page) || 1,
-    total: toNumber(total) ?? items.length,
-    items
-  }
-}
-
-function normalizeSkuGroups(raw) {
-  const groups = pick(raw, ['props', 'propGroups', 'prop_groups', 'skuProps', 'sku_props', 'attributes'])
-  if (!Array.isArray(groups)) return []
-  return groups
-    .map((group) => {
-      const name = pick(group, ['name', 'propName', 'prop_name', 'title'])
-      const values = pick(group, ['values', 'value', 'options']) || []
-      if (!Array.isArray(values)) return null
-      return {
-        name: name || '',
-        values: values
-          .map((v) => ({
-            name: pick(v, ['name', 'value', 'valueName', 'value_name']) || String(v),
-            image: pick(v, ['image', 'imgUrl', 'img_url', 'pic']) || ''
-          }))
-          .filter((v) => v.name)
-      }
-    })
-    .filter((g) => g && g.values && g.values.length)
-}
-
-function normalizeSkus(raw) {
-  const list = pick(raw, ['skus', 'sku_list', 'skuList', 'variants'])
-  if (!Array.isArray(list)) return []
-  return list.map((sku) => ({
-    skuId: String(pick(sku, ['skuId', 'sku_id', 'id']) || ''),
-    specs: pick(sku, ['specs', 'properties', 'propsName', 'props_name']) || pick(sku, ['name', 'skuName', 'sku_name']) || '',
-    price: toNumber(pick(sku, ['price', 'promotion_price', 'promotionPrice'])),
-    image: pick(sku, ['image', 'imgUrl', 'img_url', 'pic']) || '',
-    stock: toNumber(pick(sku, ['stock', 'quantity', 'amountOnSale', 'amount_on_sale'])) ?? 99999
-  }))
-}
-
-function normalizePriceTiers(raw) {
-  const quantityPrices = raw.shopAddition?.quantityPrices
-  if (Array.isArray(quantityPrices) && quantityPrices.length) {
-    return quantityPrices
-      .map((tier) => ({
-        minQty: parseMoqFromTier(pick(tier, ['quantity'])) || 1,
-        price: toNumber(pick(tier, ['value', 'price']))
-      }))
-      .filter((t) => t.price !== null)
-      .sort((a, b) => a.minQty - b.minQty)
-  }
-  const tiers = pick(raw, ['priceRange', 'price_range', 'priceTiers', 'price_tiers', 'wholesale', 'wholesalePrices'])
-  if (!Array.isArray(tiers)) return []
-  return tiers
-    .map((tier) => ({
-      minQty: toNumber(pick(tier, ['minQuantity', 'min_quantity', 'startQuantity', 'start_quantity', 'begin_num', 'beginNum'])) || 1,
-      price: toNumber(pick(tier, ['price', 'unitPrice', 'unit_price']))
-    }))
-    .filter((t) => t.price !== null)
-    .sort((a, b) => a.minQty - b.minQty)
-}
-
-// The "1688 open platform" style shape a real RapidAPI "Detail Product
-// 1688" response is in - confirmed via the RapidAPI console: { success,
-// data: { offerModel: { offerId, subject, imageList, currentPriceDisplay,
-// saleQuantity, companyName, detailUrl, offerBeginAmount, unit, videoUrl,
-// skuProps, skuList, ... }, skuModel: { offerBaseInfo, skuModel:
-// { skuInfoMapOriginal }, orderParamModel }, description }, code }.
-function parsePriceRangeDisplay(text) {
+// A variant/sell price is often a range like "5.20--8.90", sometimes a
+// single value like "5.20".
+function parsePriceRange(text) {
   if (!text) return { min: null, max: null }
-  const parts = String(text).split('-').map((s) => parseFloat(s))
+  const parts = String(text).split('--').map((s) => parseFloat(s))
   if (parts.length === 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1])) {
     return { min: parts[0], max: parts[1] }
   }
@@ -211,122 +50,92 @@ function parsePriceRangeDisplay(text) {
   return { min: single, max: single }
 }
 
-function normalizeOfferModelDetail(container) {
-  const offer = container.offerModel
-  const skuModel = container.skuModel
-  const offerId = offer.offerId || skuModel?.offerBaseInfo?.offerId
-  const title = stripHtml(offer.subject || skuModel?.offerBaseInfo?.title)
-  const images = Array.isArray(offer.imageList) && offer.imageList.length ? offer.imageList : offer.coverUrl ? [offer.coverUrl] : []
-  const image = images[0] || ''
+export function normalizeItem(entry) {
+  if (!entry || typeof entry !== 'object') return null
 
-  const { min: price, max: priceMax } = parsePriceRangeDisplay(offer.currentPriceDisplay || offer.originPriceDisplay)
-  const sales = parseChineseCount(offer.saleQuantity) ?? toNumber(offer.saleQuantity)
-  const shopName = offer.companyName || skuModel?.offerBaseInfo?.sellerLoginId || ''
-  const link = offer.detailUrl || (offerId ? `https://detail.1688.com/offer/${offerId}.html` : '')
-  const moq = toNumber(offer.offerBeginAmount) || 1
-  const unit = offer.unit || 'pcs'
-  const description = container.description || ''
-  const video = offer.videoUrl || ''
+  const itemId = pick(entry, ['pid', 'productId', 'id'])
+  const title = stripHtml(pick(entry, ['productNameEn', 'productName', 'nameEn', 'name']))
+  const image = pick(entry, ['productImage', 'bigImage', 'image'])
+  const { min, max } = parsePriceRange(pick(entry, ['sellPrice', 'price']))
+  const shopName = pick(entry, ['supplierName', 'categoryName']) || 'CJ Dropshipping'
+  const link = pick(entry, ['productUrl', 'sourceUrl', 'link'])
+  const unit = pick(entry, ['productUnit', 'unit']) || 'pcs'
 
-  const propGroups = Array.isArray(offer.skuProps)
-    ? offer.skuProps
-        .map((group) => ({
-          name: group.prop || '',
-          values: Array.isArray(group.value)
-            ? group.value.map((v) => ({ name: v.name || '', image: v.imageUrl || '' })).filter((v) => v.name)
-            : []
-        }))
-        .filter((g) => g.values.length)
-    : []
-
-  const imageByName = {}
-  for (const group of propGroups) {
-    for (const v of group.values) {
-      if (v.name && v.image) imageByName[v.name] = v.image
-    }
-  }
-
-  const skuInfoMap = skuModel?.skuModel?.skuInfoMapOriginal
-  let skus = []
-  if (skuInfoMap && typeof skuInfoMap === 'object') {
-    skus = Object.entries(skuInfoMap).map(([name, info]) => ({
-      skuId: String(info.skuId || ''),
-      specs: info.specAttrs || name,
-      price: toNumber(info.discountPrice ?? info.price),
-      image: imageByName[name] || image,
-      stock: toNumber(info.canBookCount) ?? 99999
-    }))
-  } else if (Array.isArray(offer.skuList)) {
-    skus = offer.skuList.map((sku) => ({
-      skuId: '',
-      specs: sku.name || '',
-      price: toNumber(sku.discountPrice ?? sku.price),
-      image: sku.imageUrl || image,
-      stock: toNumber(sku.canBookCount) ?? 99999
-    }))
-  }
-
-  const skuRangePrices = skuModel?.orderParamModel?.orderParam?.skuParam?.skuRangePrices
-  const priceTiers = Array.isArray(skuRangePrices)
-    ? [...new Map(
-        skuRangePrices.map((t) => [toNumber(t.beginAmount) || 1, toNumber(t.price)]).filter(([, p]) => p !== null)
-      ).entries()]
-        .map(([minQty, tierPrice]) => ({ minQty, price: tierPrice }))
-        .sort((a, b) => a.minQty - b.minQty)
-    : []
+  if (!itemId && !title) return null
 
   return {
-    itemId: offerId ? String(offerId) : null,
+    itemId: itemId ? String(itemId) : null,
     title: title || '(anarana tsy fantatra)',
-    image,
-    price,
-    priceMax: priceMax && priceMax !== price ? priceMax : null,
-    sales,
+    image: image || '',
+    price: usdToCny(min),
+    priceMax: max !== null && max !== min ? usdToCny(max) : null,
+    sales: toNumber(pick(entry, ['listedNum', 'sales'])),
     rating: null,
     shopName,
-    link,
-    moq,
-    unit,
-    images,
-    description,
-    video,
-    priceTiers,
-    propGroups,
-    skus
+    link: link || '',
+    moq: toNumber(pick(entry, ['moq', 'minOrderQty'])) || 1,
+    unit
   }
+}
+
+export function normalizeSearchResponse(raw, keyword, page) {
+  const container = raw?.data && typeof raw.data === 'object' ? raw.data : raw
+  const list = container?.list
+  const items = Array.isArray(list) ? list.map(normalizeItem).filter(Boolean) : []
+  const total = toNumber(pick(container || {}, ['total']))
+  return {
+    keyword,
+    page: Number(page) || 1,
+    total: total ?? items.length,
+    items
+  }
+}
+
+function normalizeVariants(container) {
+  const variants = pick(container, ['variants', 'variantList'])
+  if (!Array.isArray(variants) || !variants.length) return { propGroups: [], skus: [] }
+
+  const values = variants
+    .map((v) => ({
+      name: stripHtml(pick(v, ['variantNameEn', 'variantName', 'name'])),
+      image: pick(v, ['variantImage', 'image']) || ''
+    }))
+    .filter((v) => v.name)
+
+  // CJ variants are usually a single combined label (e.g. "Black-M") rather
+  // than separate color/size axes, so they're grouped under one selector.
+  const propGroups = values.length ? [{ name: 'Safidy', values }] : []
+
+  const skus = variants.map((v) => ({
+    skuId: String(pick(v, ['vid', 'variantSku', 'sku']) || ''),
+    specs: stripHtml(pick(v, ['variantNameEn', 'variantName', 'name'])),
+    price: usdToCny(toNumber(pick(v, ['variantSellPrice', 'sellPrice', 'price']))),
+    image: pick(v, ['variantImage', 'image']) || '',
+    stock: toNumber(pick(v, ['variantStock', 'stock', 'inventoryNum'])) ?? 99999
+  }))
+
+  return { propGroups, skus }
 }
 
 export function normalizeDetailResponse(rawEntry) {
   const container = rawEntry?.data && typeof rawEntry.data === 'object' ? rawEntry.data : rawEntry
-  if (container?.offerModel && typeof container.offerModel === 'object') {
-    return normalizeOfferModelDetail(container)
-  }
-
-  // Fallback for an unrecognized/older shape - stay defensive.
-  const inner = rawEntry?.data
-  const raw = inner && typeof inner === 'object' && (inner.offerId || inner.title) ? inner : rawEntry
-
-  const base = normalizeItem(rawEntry)
+  const base = normalizeItem(container)
   if (!base) return null
 
-  const imagesRaw = pick(raw, ['images', 'imageList', 'image_list', 'gallery', 'pics'])
-  let images = Array.isArray(imagesRaw) && imagesRaw.length ? imagesRaw.map((i) => (typeof i === 'string' ? i : pick(i, ['url', 'image', 'imgUrl']))).filter(Boolean) : []
-  if (!images.length) {
-    const offerPic = pick(raw, ['offerPicUrl', 'pictureUrl'])
-    if (offerPic) images = String(offerPic).split(',').map((s) => s.trim()).filter(Boolean)
-  }
+  const imagesRaw = pick(container, ['productImageSet', 'images'])
+  let images = Array.isArray(imagesRaw) && imagesRaw.length ? imagesRaw.filter(Boolean) : []
   if (!images.length && base.image) images = [base.image]
 
-  const description = pick(raw, ['description', 'desc', 'detailHtml', 'detail_html', 'content'])
-  const video = pick(raw, ['video', 'videoUrl', 'video_url'])
+  const description = pick(container, ['description', 'desc']) || ''
+  const { propGroups, skus } = normalizeVariants(container)
 
   return {
     ...base,
     images,
-    description: description || '',
-    video: video || '',
-    priceTiers: normalizePriceTiers(raw),
-    propGroups: normalizeSkuGroups(raw),
-    skus: normalizeSkus(raw)
+    description,
+    video: '',
+    priceTiers: [],
+    propGroups,
+    skus
   }
 }

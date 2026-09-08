@@ -1,6 +1,7 @@
-// 1688's image CDN (alicdn.com) blocks hotlinking from other domains, so
-// product images are routed through our own /api/image proxy instead of
-// being loaded directly in <img> tags.
+// alicdn.com (Alibaba's CDN) blocks hotlinking from other domains, so any
+// image still hosted there is routed through our own /api/image proxy
+// instead of being loaded directly in <img> tags. CJ Dropshipping's own
+// image CDN isn't known to need this, so its URLs pass through unchanged.
 export function proxyImage(url) {
   if (!url) return url
   try {
