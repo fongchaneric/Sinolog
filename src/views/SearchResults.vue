@@ -45,7 +45,10 @@ onMounted(load)
       <div v-for="i in 10" :key="i" class="card aspect-[3/4] animate-pulse bg-gray-100" />
     </div>
 
-    <div v-else-if="error" class="text-center text-sm text-gray-500 py-16">{{ error }}</div>
+    <div v-else-if="error" class="text-center text-sm text-gray-500 py-16">
+      <p>{{ error }}</p>
+      <button class="btn-brand mt-4" @click="load">Andramo indray</button>
+    </div>
 
     <div v-else-if="!items.length" class="text-center text-sm text-gray-400 py-16">
       Tsy nisy entana hita. Andramo teny hafa.

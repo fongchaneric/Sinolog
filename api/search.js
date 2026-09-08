@@ -16,7 +16,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const raw = await searchItems(keyword, page)
+    // The upstream search call is noticeably slower for some keywords than
+    // the shared 8s default, and a 429 retry there would risk stacking up
+    // past Vercel's own ~10s execution cap - so give it a bit more of the
+    // budget and only one retry (matches api/trending.js's already-working
+    // settings for the exact same call).
+    const raw = await searchItems(keyword, page, { timeoutMs: 8800, maxRetries: 1 })
 
     // Temporary diagnostic escape hatch: ?raw=1 returns RapidAPI's
     // untouched response so the field-name mapping in _lib/normalize.js
