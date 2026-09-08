@@ -68,6 +68,11 @@ onMounted(loadTrending)
         <p class="text-xs mt-1 text-gray-400">Amarino fa efa voafefy ao amin'ny Vercel ny JUSTONEAPI_TOKEN.</p>
       </div>
 
+      <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">
+        <p>Tsy misy entana hita amin'izao fotoana izao.</p>
+        <p class="text-xs mt-1">Andramo mitady entana amin'ny teny hafa eo ambony, na avero afaka kelikely.</p>
+      </div>
+
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 tv:grid-cols-6 gap-2">
         <ProductCard v-for="p in products" :key="p.itemId" :product="p" />
       </div>

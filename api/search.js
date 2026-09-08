@@ -37,6 +37,10 @@ export default async function handler(req, res) {
       res.status(429).json({ error: err.message })
       return
     }
+    if (err.upstreamBusinessError) {
+      res.status(503).json({ error: "Tsy afaka mividy amin'izao fotoana izao - mifandraisa amin'ny admin", detail: err.message })
+      return
+    }
     res.status(502).json({ error: 'Tsy nahazo ny lisitry ny entana', detail: err.message })
   }
 }
