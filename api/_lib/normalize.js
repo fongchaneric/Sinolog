@@ -195,7 +195,114 @@ function normalizePriceTiers(raw) {
     .sort((a, b) => a.minQty - b.minQty)
 }
 
+// The "1688 open platform" style shape a real RapidAPI "Detail Product
+// 1688" response is in - confirmed via the RapidAPI console: { success,
+// data: { offerModel: { offerId, subject, imageList, currentPriceDisplay,
+// saleQuantity, companyName, detailUrl, offerBeginAmount, unit, videoUrl,
+// skuProps, skuList, ... }, skuModel: { offerBaseInfo, skuModel:
+// { skuInfoMapOriginal }, orderParamModel }, description }, code }.
+function parsePriceRangeDisplay(text) {
+  if (!text) return { min: null, max: null }
+  const parts = String(text).split('-').map((s) => parseFloat(s))
+  if (parts.length === 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1])) {
+    return { min: parts[0], max: parts[1] }
+  }
+  const single = toNumber(text)
+  return { min: single, max: single }
+}
+
+function normalizeOfferModelDetail(container) {
+  const offer = container.offerModel
+  const skuModel = container.skuModel
+  const offerId = offer.offerId || skuModel?.offerBaseInfo?.offerId
+  const title = stripHtml(offer.subject || skuModel?.offerBaseInfo?.title)
+  const images = Array.isArray(offer.imageList) && offer.imageList.length ? offer.imageList : offer.coverUrl ? [offer.coverUrl] : []
+  const image = images[0] || ''
+
+  const { min: price, max: priceMax } = parsePriceRangeDisplay(offer.currentPriceDisplay || offer.originPriceDisplay)
+  const sales = parseChineseCount(offer.saleQuantity) ?? toNumber(offer.saleQuantity)
+  const shopName = offer.companyName || skuModel?.offerBaseInfo?.sellerLoginId || ''
+  const link = offer.detailUrl || (offerId ? `https://detail.1688.com/offer/${offerId}.html` : '')
+  const moq = toNumber(offer.offerBeginAmount) || 1
+  const unit = offer.unit || 'pcs'
+  const description = container.description || ''
+  const video = offer.videoUrl || ''
+
+  const propGroups = Array.isArray(offer.skuProps)
+    ? offer.skuProps
+        .map((group) => ({
+          name: group.prop || '',
+          values: Array.isArray(group.value)
+            ? group.value.map((v) => ({ name: v.name || '', image: v.imageUrl || '' })).filter((v) => v.name)
+            : []
+        }))
+        .filter((g) => g.values.length)
+    : []
+
+  const imageByName = {}
+  for (const group of propGroups) {
+    for (const v of group.values) {
+      if (v.name && v.image) imageByName[v.name] = v.image
+    }
+  }
+
+  const skuInfoMap = skuModel?.skuModel?.skuInfoMapOriginal
+  let skus = []
+  if (skuInfoMap && typeof skuInfoMap === 'object') {
+    skus = Object.entries(skuInfoMap).map(([name, info]) => ({
+      skuId: String(info.skuId || ''),
+      specs: info.specAttrs || name,
+      price: toNumber(info.discountPrice ?? info.price),
+      image: imageByName[name] || image,
+      stock: toNumber(info.canBookCount) ?? 99999
+    }))
+  } else if (Array.isArray(offer.skuList)) {
+    skus = offer.skuList.map((sku) => ({
+      skuId: '',
+      specs: sku.name || '',
+      price: toNumber(sku.discountPrice ?? sku.price),
+      image: sku.imageUrl || image,
+      stock: toNumber(sku.canBookCount) ?? 99999
+    }))
+  }
+
+  const skuRangePrices = skuModel?.orderParamModel?.orderParam?.skuParam?.skuRangePrices
+  const priceTiers = Array.isArray(skuRangePrices)
+    ? [...new Map(
+        skuRangePrices.map((t) => [toNumber(t.beginAmount) || 1, toNumber(t.price)]).filter(([, p]) => p !== null)
+      ).entries()]
+        .map(([minQty, tierPrice]) => ({ minQty, price: tierPrice }))
+        .sort((a, b) => a.minQty - b.minQty)
+    : []
+
+  return {
+    itemId: offerId ? String(offerId) : null,
+    title: title || '(anarana tsy fantatra)',
+    image,
+    price,
+    priceMax: priceMax && priceMax !== price ? priceMax : null,
+    sales,
+    rating: null,
+    shopName,
+    link,
+    moq,
+    unit,
+    images,
+    description,
+    video,
+    priceTiers,
+    propGroups,
+    skus
+  }
+}
+
 export function normalizeDetailResponse(rawEntry) {
+  const container = rawEntry?.data && typeof rawEntry.data === 'object' ? rawEntry.data : rawEntry
+  if (container?.offerModel && typeof container.offerModel === 'object') {
+    return normalizeOfferModelDetail(container)
+  }
+
+  // Fallback for an unrecognized/older shape - stay defensive.
   const inner = rawEntry?.data
   const raw = inner && typeof inner === 'object' && (inner.offerId || inner.title) ? inner : rawEntry
 
