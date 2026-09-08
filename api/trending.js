@@ -1,9 +1,9 @@
-import { searchItems } from './_lib/justoneapi.js'
+import { searchItems } from './_lib/rapidapi.js'
 import { normalizeSearchResponse } from './_lib/normalize.js'
 
 // The homepage "trending" grid used to fan out to several keywords in one
 // request, but that stacked up latency (spacing + retries) and regularly
-// blew past JustOneAPI's response time, timing everything out. A single
+// blew past the upstream's response time, timing everything out. A single
 // request is exactly the same call SearchResults.vue already makes
 // successfully, so it's used here too - one keyword per cache window,
 // rotating over time so the grid still varies across visits.
