@@ -1,11 +1,15 @@
 // CJ Dropshipping (developers.cjdropshipping.com) requires a login step to
 // get an access token - it isn't a static key used directly like the
-// previous RapidAPI provider. The login endpoint (getAccessToken) can only
-// be called once every 300 seconds per account, and the token it returns
-// is valid for a long time (documented as ~15 days, refreshToken ~180
-// days), so the token is cached in Firebase Realtime Database and shared
-// across every serverless invocation instead of re-logging in on every
-// cold start.
+// previous RapidAPI provider. The login endpoint (getAccessToken) is
+// throttled to a low queries-per-second rate, and the token it returns is
+// valid for a long time (documented as ~15 days, refreshToken ~180 days),
+// so the token is cached in Firebase Realtime Database and shared across
+// every serverless invocation instead of re-logging in on every cold
+// start. Two more things keep the throttle from ever surfacing to a
+// buyer: a short retry-with-backoff on a 429/"Too Many Requests" response,
+// and an in-memory single-flight guard so several concurrent requests on
+// the same warm instance (e.g. a burst right after the cache goes cold)
+// share one login call instead of firing one each.
 
 import { adminDb } from './firebaseAdmin.js'
 
@@ -22,7 +26,15 @@ function getCredentials() {
   return { apiKey, email }
 }
 
-async function postJson(path, body) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isTooManyRequests(res, json) {
+  return res.status === 429 || /too many requests|qps limit/i.test(json?.message || '')
+}
+
+async function postJson(path, body, attempt = 0) {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -35,6 +47,12 @@ async function postJson(path, body) {
   } catch {
     throw new Error(`CJ Dropshipping returned a non-JSON response (status ${res.status}): ${text.slice(0, 200)}`)
   }
+
+  if (isTooManyRequests(res, json) && attempt < 3) {
+    await sleep(1200 * (attempt + 1))
+    return postJson(path, body, attempt + 1)
+  }
+
   if (!res.ok || json.result === false) {
     throw new Error(`CJ Dropshipping auth failed: ${json.message || res.status}`)
   }
@@ -67,7 +85,7 @@ async function writeCachedToken(data) {
   }
 }
 
-export async function getAccessToken() {
+async function fetchFreshToken() {
   const cached = await readCachedToken()
   const now = Date.now()
 
@@ -88,4 +106,15 @@ export async function getAccessToken() {
   const data = await login()
   await writeCachedToken(data)
   return data.accessToken
+}
+
+let inFlight = null
+
+export function getAccessToken() {
+  if (!inFlight) {
+    inFlight = fetchFreshToken().finally(() => {
+      inFlight = null
+    })
+  }
+  return inFlight
 }
