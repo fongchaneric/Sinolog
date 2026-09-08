@@ -2,13 +2,25 @@ import { searchItems } from './_lib/cjdropshipping.js'
 import { normalizeSearchResponse } from './_lib/normalize.js'
 import { getCachedSearch, setCachedSearch } from './_lib/searchCache.js'
 
-// The homepage "trending" grid picks a keyword at random on every request
-// (rather than a time-bucketed rotation) so that reloading the page, or
-// scrolling to load another batch, actually shows different products each
-// time. A ?keyword= override lets the client ask for one of the buyer's
-// own recent searches instead of the generic default list.
-const DEFAULT_KEYWORDS = ['phone case', 'keychain', 'usb cable', 'bluetooth earphone', 'power bank', 'memory card']
+// The homepage "trending" grid must always come back with a full batch of
+// ITEMS_LIMIT items (a single keyword can come up short), and the same
+// keyword should look different across reloads - both handled by trying
+// several keyword/page combinations and merging the (deduplicated)
+// results until the batch is full or attempts run out. A ?keyword=
+// override lets the client ask for one of the buyer's own recent
+// searches first; if that alone doesn't fill the batch, generic defaults
+// top it up rather than leaving the grid short.
+const DEFAULT_KEYWORDS = ['phone case', 'keychain', 'usb cable', 'bluetooth earphone', 'power bank', 'memory card', 'watch', 'sunglasses', 'backpack', 'toy']
 const ITEMS_LIMIT = 24
+const MAX_ATTEMPTS = 5
+
+function randomPage() {
+  return Math.floor(Math.random() * 3) + 1 // 1-3, so a reload of the same keyword surfaces different items
+}
+
+function randomDefaultKeyword() {
+  return DEFAULT_KEYWORDS[Math.floor(Math.random() * DEFAULT_KEYWORDS.length)]
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -17,32 +29,46 @@ export default async function handler(req, res) {
   }
 
   const requested = (req.query.keyword || '').toString().trim()
-  const keyword = requested || DEFAULT_KEYWORDS[Math.floor(Math.random() * DEFAULT_KEYWORDS.length)]
+  const collected = []
+  const seen = new Set()
+  let anyFailed = false
 
-  try {
-    const raw = await searchItems(keyword, 1, { maxRetries: 1, timeoutMs: 8000 })
-    const normalized = normalizeSearchResponse(raw, keyword, 1)
-    const items = normalized.items.slice(0, ITEMS_LIMIT)
-    if (items.length) {
-      await setCachedSearch(keyword, { ...normalized, items })
+  for (let attempt = 0; attempt < MAX_ATTEMPTS && collected.length < ITEMS_LIMIT; attempt++) {
+    const keyword = attempt === 0 && requested ? requested : randomDefaultKeyword()
+    try {
+      const raw = await searchItems(keyword, randomPage(), { maxRetries: 1, timeoutMs: 8000 })
+      const normalized = normalizeSearchResponse(raw, keyword, 1)
+      for (const item of normalized.items) {
+        if (!seen.has(item.itemId)) {
+          seen.add(item.itemId)
+          collected.push(item)
+        }
+      }
+      if (normalized.items.length) {
+        await setCachedSearch(keyword, normalized)
+      }
+    } catch (err) {
+      anyFailed = true
+      console.error(`trending: keyword "${keyword}" failed`, err.message)
     }
-    // Deliberately not CDN-cached: each call should be free to return a
-    // different random keyword's results.
-    res.setHeader('Cache-Control', 'no-store')
-    res.status(200).json({ items })
-  } catch (err) {
-    console.error(`trending: keyword "${keyword}" failed`, err.message)
+  }
 
-    // A live failure shouldn't leave the homepage grid empty - fall back to
-    // the last successful result for this keyword instead.
-    const cached = await getCachedSearch(keyword)
+  res.setHeader('Cache-Control', 'no-store')
+
+  if (collected.length) {
+    res.status(200).json({ items: collected.slice(0, ITEMS_LIMIT) })
+    return
+  }
+
+  // Every live attempt failed (or returned nothing) - fall back to a
+  // previously cached batch instead of leaving the grid empty.
+  if (anyFailed) {
+    const cached = await getCachedSearch(requested || randomDefaultKeyword())
     if (cached) {
-      res.setHeader('Cache-Control', 'no-store')
-      res.status(200).json({ items: cached.items })
+      res.status(200).json({ items: cached.items.slice(0, ITEMS_LIMIT) })
       return
     }
-
-    res.setHeader('Cache-Control', 'no-store')
-    res.status(200).json({ items: [] })
   }
+
+  res.status(200).json({ items: [] })
 }

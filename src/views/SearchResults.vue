@@ -98,7 +98,7 @@ onUnmounted(() => {
     </div>
 
     <div ref="sentinel" class="h-1" />
-    <div v-if="loadingMore" class="flex flex-col items-center py-6 gap-2 text-gray-400 text-sm">
+    <div v-if="loadingMore" class="flex flex-col items-center py-3 gap-1.5 text-gray-400 text-sm">
       <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
       <span>Loading...</span>
     </div>
