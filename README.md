@@ -27,7 +27,7 @@ Database), déployé sur **Vercel**, code hébergé sur **GitHub**.
   bord admin (jamais vers l'interface acheteur) pour valider les paiements
   et faire évoluer le statut des commandes.
 - Design responsive (mobile, tablette, ordinateur, TV) inspiré de
-  l'interface 1688.
+  l'interface 1688
 
 ## Arborescence
 
