@@ -43,10 +43,10 @@ async function setStatus(status) {
 
 <template>
   <div class="p-4 lg:p-6 max-w-2xl">
-    <router-link :to="{ name: 'admin-orders' }" class="text-sm text-gray-400 mb-3 inline-block">‹ Hiverina</router-link>
+    <router-link :to="{ name: 'admin-orders' }" class="text-sm text-gray-400 mb-3 inline-block">‹ Retour</router-link>
 
-    <div v-if="!loaded" class="text-center text-gray-400 py-16">Eo am-pitadiavana...</div>
-    <div v-else-if="!order" class="text-center text-gray-400 py-16">Tsy hita ilay commande</div>
+    <div v-if="!loaded" class="text-center text-gray-400 py-16">Recherche en cours...</div>
+    <div v-else-if="!order" class="text-center text-gray-400 py-16">Commande introuvable</div>
 
     <div v-else class="space-y-3">
       <div class="card p-4">
@@ -59,28 +59,28 @@ async function setStatus(status) {
       </div>
 
       <div class="card p-4 bg-amber-50 border border-amber-100">
-        <p class="text-sm font-semibold text-amber-800 mb-2">💳 Antsipirian'ny Payment</p>
+        <p class="text-sm font-semibold text-amber-800 mb-2">💳 Détails du paiement</p>
         <div class="text-sm text-amber-900 space-y-1">
-          <p>Fomba: <span class="font-semibold capitalize">{{ order.paymentMethod }}</span> ({{ order.paymentPhoneTo }})</p>
-          <p>Numero nandefasan'ny mpividy: <span class="font-semibold">{{ order.senderPhone }}</span></p>
-          <p>Reference: <span class="font-semibold">{{ order.paymentReference }}</span></p>
-          <p v-if="order.deliveryAddress">Adiresy: <span class="font-semibold">{{ order.deliveryAddress }}</span></p>
+          <p>Méthode : <span class="font-semibold capitalize">{{ order.paymentMethod }}</span> ({{ order.paymentPhoneTo }})</p>
+          <p>Numéro d'envoi du client : <span class="font-semibold">{{ order.senderPhone }}</span></p>
+          <p>Référence : <span class="font-semibold">{{ order.paymentReference }}</span></p>
+          <p v-if="order.deliveryAddress">Adresse : <span class="font-semibold">{{ order.deliveryAddress }}</span></p>
         </div>
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Entana</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Produits</p>
         <div v-for="(line, i) in order.items" :key="i" class="flex gap-3 py-2 border-b last:border-0 border-gray-100">
           <img :src="proxyImage(line.image)" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
             <p class="text-sm text-gray-800 line-clamp-2">{{ line.title }}</p>
             <p v-if="line.variantLabel" class="text-xs text-gray-400">{{ line.variantLabel }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ formatYuan(line.price) }} × {{ line.quantity }}</p>
-            <a v-if="line.link" :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 Hita ao amin'ny loharano</a>
+            <a v-if="line.link" :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 Voir la source</a>
           </div>
         </div>
         <div class="flex justify-between font-bold pt-2">
-          <span class="text-sm">Totaly</span>
+          <span class="text-sm">Total</span>
           <div class="text-right">
             <p class="text-brand">{{ formatYuan(order.totalYuan) }}</p>
             <p class="text-xs text-gray-400 font-normal">{{ formatMga(order.totalYuan) }}</p>
@@ -89,8 +89,8 @@ async function setStatus(status) {
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Manova ny status</p>
-        <textarea v-model="note" rows="2" placeholder="Fanamarihana ho an'ny mpividy (opsiona)" class="input-field resize-none mb-3" />
+        <p class="text-sm font-semibold text-gray-700 mb-2">Modifier le statut</p>
+        <textarea v-model="note" rows="2" placeholder="Note pour le client (optionnel)" class="input-field resize-none mb-3" />
         <div class="grid grid-cols-2 gap-2">
           <button
             v-for="(meta, key) in STATUS_META"

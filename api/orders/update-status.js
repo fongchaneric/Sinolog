@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   const { orderId, status, adminNote } = req.body || {}
 
   if (!orderId || !status || !ALLOWED_STATUSES.includes(status)) {
-    res.status(400).json({ error: 'orderId sy status manan-kery no ilaina' })
+    res.status(400).json({ error: 'Un orderId et un status valide sont requis' })
     return
   }
 
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     const orderRef = adminDb.ref(`orders/${orderId}`)
     const snap = await orderRef.get()
     if (!snap.exists()) {
-      res.status(404).json({ error: 'Tsy hita ilay commande' })
+      res.status(404).json({ error: 'Commande introuvable' })
       return
     }
 
@@ -37,6 +37,6 @@ export default async function handler(req, res) {
     res.status(200).json({ ok: true })
   } catch (err) {
     console.error('update-status error', err)
-    res.status(500).json({ error: 'Nisy olana teo am-panovana ny status', detail: err.message })
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du statut', detail: err.message })
   }
 }

@@ -94,7 +94,7 @@ function confirm() {
           <div class="flex-1 min-w-0">
             <p class="text-brand font-bold text-xl">{{ formatYuan(unitPrice) }}</p>
             <p class="text-xs text-gray-400 mt-1">MOQ: {{ product.moq || 1 }}{{ product.unit || 'pcs' }}</p>
-            <p v-if="specsLabel" class="text-xs text-gray-500 mt-1">Voafantina: {{ specsLabel }}</p>
+            <p v-if="specsLabel" class="text-xs text-gray-500 mt-1">Sélectionné : {{ specsLabel }}</p>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ function confirm() {
         </div>
 
         <div v-if="product.priceTiers?.length" class="p-4 border-b border-gray-100">
-          <p class="text-sm font-semibold text-gray-700 mb-2">Vidiny arakaraky ny habetsahana</p>
+          <p class="text-sm font-semibold text-gray-700 mb-2">Prix selon la quantité</p>
           <div class="grid grid-cols-3 gap-2 text-center text-xs">
             <div v-for="(tier, i) in product.priceTiers" :key="i" class="border border-gray-200 rounded-lg py-2">
               <p class="font-bold text-brand">{{ formatYuan(tier.price) }}</p>
@@ -125,7 +125,7 @@ function confirm() {
         </div>
 
         <div class="p-4 flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-700">Isa</span>
+          <span class="text-sm font-semibold text-gray-700">Quantité</span>
           <div class="flex items-center gap-3">
             <button @click="dec" class="w-8 h-8 rounded-full bg-gray-100 text-lg flex items-center justify-center">−</button>
             <span class="w-10 text-center font-semibold">{{ quantity }}</span>
@@ -135,11 +135,11 @@ function confirm() {
 
         <div class="p-4 pt-0">
           <div class="flex items-center justify-between mb-3 text-sm">
-            <span class="text-gray-500">Totaly</span>
+            <span class="text-gray-500">Total</span>
             <span class="text-brand font-bold text-lg">{{ formatYuan(totalPrice) }}</span>
           </div>
           <button class="btn-brand w-full !py-3" @click="confirm">
-            {{ mode === 'buy' ? "Vidio Izao" : "Ampidiro anaty Sobika" }}
+            {{ mode === 'buy' ? "Acheter maintenant" : "Ajouter au panier" }}
           </button>
         </div>
       </div>

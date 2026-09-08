@@ -31,15 +31,15 @@ const recentOrders = computed(() => [...orders.value].sort((a, b) => b.createdAt
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       <div class="card p-4">
-        <p class="text-xs text-gray-400">Commande rehetra</p>
+        <p class="text-xs text-gray-400">Total commandes</p>
         <p class="text-2xl font-bold text-gray-800 mt-1">{{ orders.length }}</p>
       </div>
       <div class="card p-4">
-        <p class="text-xs text-gray-400">Miandry fanamarinana</p>
+        <p class="text-xs text-gray-400">En attente</p>
         <p class="text-2xl font-bold text-amber-500 mt-1">{{ pendingCount }}</p>
       </div>
       <div class="card p-4">
-        <p class="text-xs text-gray-400">Vita</p>
+        <p class="text-xs text-gray-400">Terminées</p>
         <p class="text-2xl font-bold text-green-600 mt-1">{{ completedCount }}</p>
       </div>
       <div class="card p-4">
@@ -50,10 +50,10 @@ const recentOrders = computed(() => [...orders.value].sort((a, b) => b.createdAt
 
     <div class="card">
       <div class="flex items-center justify-between p-4 border-b border-gray-100">
-        <p class="font-semibold text-gray-700">Commande vao haingana</p>
-        <router-link :to="{ name: 'admin-orders' }" class="text-brand text-xs font-medium">Jereo daholo ›</router-link>
+        <p class="font-semibold text-gray-700">Commandes récentes</p>
+        <router-link :to="{ name: 'admin-orders' }" class="text-brand text-xs font-medium">Voir tout ›</router-link>
       </div>
-      <div v-if="!recentOrders.length" class="p-8 text-center text-gray-400 text-sm">Mbola tsy misy commande</div>
+      <div v-if="!recentOrders.length" class="p-8 text-center text-gray-400 text-sm">Aucune commande pour le moment</div>
       <router-link
         v-for="o in recentOrders"
         :key="o.id"

@@ -43,14 +43,14 @@ onUnmounted(() => {
 
 <template>
   <div class="max-w-3xl mx-auto px-2 py-3">
-    <h1 class="text-lg font-bold text-gray-800 px-1 mb-2">Ny Commande-ko</h1>
+    <h1 class="text-lg font-bold text-gray-800 px-1 mb-2">Mes commandes</h1>
 
-    <div v-if="!loaded" class="text-center text-gray-400 py-16">Eo am-panisana...</div>
+    <div v-if="!loaded" class="text-center text-gray-400 py-16">Chargement...</div>
 
     <div v-else-if="!orderIds.length" class="text-center text-gray-400 py-20">
       <p class="text-4xl mb-2">📦</p>
-      <p>Mbola tsy nanao commande ianao</p>
-      <router-link to="/" class="btn-brand inline-block mt-4">Hitady entana</router-link>
+      <p>Vous n'avez pas encore passé de commande</p>
+      <router-link to="/" class="btn-brand inline-block mt-4">Rechercher des produits</router-link>
     </div>
 
     <div v-else class="space-y-2">
@@ -62,7 +62,7 @@ onUnmounted(() => {
       >
         <img :src="proxyImage(o.items?.[0]?.image)" class="w-16 h-16 rounded-lg object-cover bg-gray-100 shrink-0" />
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-800 line-clamp-1">{{ o.items?.[0]?.title }}<span v-if="o.items?.length > 1"> +{{ o.items.length - 1 }} hafa</span></p>
+          <p class="text-sm text-gray-800 line-clamp-1">{{ o.items?.[0]?.title }}<span v-if="o.items?.length > 1"> +{{ o.items.length - 1 }} autres</span></p>
           <p class="text-xs text-gray-400 mt-1">{{ new Date(o.createdAt).toLocaleDateString('fr-FR') }}</p>
           <p class="text-brand font-bold text-sm mt-1">{{ formatYuan(o.totalYuan) }}</p>
         </div>

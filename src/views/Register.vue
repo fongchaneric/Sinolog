@@ -16,11 +16,11 @@ const error = ref('')
 async function submit() {
   error.value = ''
   if (password.value !== confirm.value) {
-    error.value = 'Tsy mitovy ny mot de passe roa'
+    error.value = 'Les deux mots de passe ne correspondent pas'
     return
   }
   if (password.value.length < 6) {
-    error.value = 'Tokony ho 6 tarehimarika farafahakeliny ny mot de passe'
+    error.value = 'Le mot de passe doit contenir au moins 6 caractères'
     return
   }
   loading.value = true
@@ -33,9 +33,9 @@ async function submit() {
     }
   } catch (e) {
     const code = e.code || ''
-    if (code.includes('email-already-in-use')) error.value = 'Efa misy kaonty mampiasa io email io'
-    else if (code.includes('invalid-email')) error.value = 'Diso ny endriky ny email'
-    else error.value = e.message || 'Nisy olana'
+    if (code.includes('email-already-in-use')) error.value = 'Un compte utilise déjà cet email'
+    else if (code.includes('invalid-email')) error.value = "Format d'email invalide"
+    else error.value = e.message || 'Une erreur est survenue'
   } finally {
     loading.value = false
   }
@@ -47,7 +47,7 @@ async function submit() {
     <div class="w-full max-w-sm">
       <div class="flex flex-col items-center mb-8">
         <div class="w-14 h-14 rounded-2xl bg-brand text-white flex items-center justify-center font-black text-2xl">S</div>
-        <h1 class="text-xl font-bold text-gray-800 mt-3">Hisoratra anarana</h1>
+        <h1 class="text-xl font-bold text-gray-800 mt-3">Créer un compte</h1>
       </div>
 
       <form @submit.prevent="submit" class="space-y-3">
@@ -56,11 +56,11 @@ async function submit() {
         <input v-model="password" type="password" required placeholder="Mot de passe" class="input-field" />
         <input v-model="confirm" type="password" required placeholder="Confirmation mot de passe" class="input-field" />
         <p v-if="error" class="text-xs text-red-500">{{ error }}</p>
-        <button type="submit" class="btn-brand w-full !py-3" :disabled="loading">{{ loading ? '...' : 'Hisoratra anarana' }}</button>
+        <button type="submit" class="btn-brand w-full !py-3" :disabled="loading">{{ loading ? '...' : "S'inscrire" }}</button>
       </form>
 
       <p class="text-center text-sm text-gray-500 mt-6">
-        Efa manana kaonty? <router-link to="/login" class="text-brand font-semibold">Hiditra</router-link>
+        Vous avez déjà un compte ? <router-link to="/login" class="text-brand font-semibold">Se connecter</router-link>
       </p>
     </div>
   </div>

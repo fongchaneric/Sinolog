@@ -55,7 +55,7 @@ async function callCj(path, params, { timeoutMs = 8000, maxRetries = 1, attempt 
     return callCj(path, params, { timeoutMs, maxRetries, attempt: attempt + 1 })
   }
   if (res.status === 429) {
-    const err = new Error('Be loatra ny fangatahana amin\'izao fotoana izao, andramo indray afaka kelikely')
+    const err = new Error('Trop de requêtes pour le moment, réessayez dans un instant')
     err.rateLimited = true
     throw err
   }

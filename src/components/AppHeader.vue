@@ -28,10 +28,10 @@ function submitSearch() {
         <input
           v-model="keyword"
           type="search"
-          placeholder="Tadiavo ny entana ilainao..."
+          placeholder="Recherchez le produit que vous voulez..."
           class="flex-1 min-w-0 text-sm outline-none bg-transparent"
         />
-        <button type="submit" class="btn-brand !py-1.5 !px-4 text-sm shrink-0">Tadiavo</button>
+        <button type="submit" class="btn-brand !py-1.5 !px-4 text-sm shrink-0">Rechercher</button>
       </form>
     </div>
   </header>

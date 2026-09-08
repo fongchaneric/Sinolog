@@ -25,14 +25,14 @@ const filtered = computed(() => (filter.value === 'all' ? orders.value : orders.
 
 <template>
   <div class="p-4 lg:p-6 max-w-6xl">
-    <h1 class="text-xl font-bold text-gray-800 mb-4">Commande rehetra</h1>
+    <h1 class="text-xl font-bold text-gray-800 mb-4">Toutes les commandes</h1>
 
     <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
       <button
         @click="filter = 'all'"
         class="shrink-0 text-xs px-3 py-1.5 rounded-full border"
         :class="filter === 'all' ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600'"
-      >Rehetra ({{ orders.length }})</button>
+      >Tous ({{ orders.length }})</button>
       <button
         v-for="(meta, key) in STATUS_META"
         :key="key"
@@ -43,7 +43,7 @@ const filtered = computed(() => (filter.value === 'all' ? orders.value : orders.
     </div>
 
     <div class="card divide-y divide-gray-50">
-      <div v-if="!filtered.length" class="p-8 text-center text-gray-400 text-sm">Tsy misy commande amin'ity sokajy ity</div>
+      <div v-if="!filtered.length" class="p-8 text-center text-gray-400 text-sm">Aucune commande dans cette catégorie</div>
       <router-link
         v-for="o in filtered"
         :key="o.id"

@@ -3,18 +3,25 @@ import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useCartStore } from './stores/cart'
+import { useFavoritesStore } from './stores/favorites'
 import AppHeader from './components/AppHeader.vue'
 import BottomNav from './components/BottomNav.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
+const favoritesStore = useFavoritesStore()
 
 watch(
   () => authStore.user,
   (user) => {
-    if (user) cartStore.watch()
-    else cartStore.stop()
+    if (user) {
+      cartStore.watch()
+      favoritesStore.watch()
+    } else {
+      cartStore.stop()
+      favoritesStore.stop()
+    }
   },
   { immediate: true }
 )

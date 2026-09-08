@@ -54,9 +54,9 @@ export default async function handler(req, res) {
       return
     }
     if (err.upstreamBusinessError) {
-      res.status(503).json({ error: "Tsy afaka mividy amin'izao fotoana izao - mifandraisa amin'ny admin", detail: err.message })
+      res.status(503).json({ error: "Achat impossible pour le moment - contactez l'administrateur", detail: err.message })
       return
     }
-    res.status(502).json({ error: 'Tsy nahazo ny lisitry ny entana', detail: err.message })
+    res.status(502).json({ error: 'Impossible de récupérer la liste des produits', detail: err.message })
   }
 }

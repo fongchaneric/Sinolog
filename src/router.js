@@ -10,6 +10,7 @@ const routes = [
   { path: '/orders', name: 'orders', component: () => import('./views/Orders.vue'), meta: { requiresAuth: true } },
   { path: '/orders/:orderId', name: 'order-detail', component: () => import('./views/OrderDetail.vue'), props: true, meta: { requiresAuth: true } },
   { path: '/account', name: 'account', component: () => import('./views/Account.vue'), meta: { requiresAuth: true } },
+  { path: '/account/favorites', name: 'favorites', component: () => import('./views/MyProducts.vue'), meta: { requiresAuth: true } },
   { path: '/login', name: 'login', component: () => import('./views/Login.vue') },
   { path: '/register', name: 'register', component: () => import('./views/Register.vue') },
 

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     const normalized = normalizeDetailResponse(raw)
     if (!normalized) {
-      res.status(404).json({ error: 'Tsy hita ilay entana' })
+      res.status(404).json({ error: 'Produit introuvable' })
       return
     }
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
@@ -37,9 +37,9 @@ export default async function handler(req, res) {
       return
     }
     if (err.upstreamBusinessError) {
-      res.status(503).json({ error: "Tsy afaka mividy amin'izao fotoana izao - mifandraisa amin'ny admin", detail: err.message })
+      res.status(503).json({ error: "Achat impossible pour le moment - contactez l'administrateur", detail: err.message })
       return
     }
-    res.status(502).json({ error: 'Tsy nahazo ny antsipiriany momba ilay entana', detail: err.message })
+    res.status(502).json({ error: 'Impossible de récupérer les détails du produit', detail: err.message })
   }
 }

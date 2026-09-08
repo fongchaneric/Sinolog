@@ -7,8 +7,8 @@ const authStore = useAuthStore()
 
 const tabs = [
   { label: 'Dashboard', to: { name: 'admin-dashboard' }, icon: '📊' },
-  { label: 'Commande', to: { name: 'admin-orders' }, icon: '📦' },
-  { label: 'Mpividy', to: { name: 'admin-users' }, icon: '👥' }
+  { label: 'Commandes', to: { name: 'admin-orders' }, icon: '📦' },
+  { label: 'Clients', to: { name: 'admin-users' }, icon: '👥' }
 ]
 
 async function logout() {
@@ -38,7 +38,7 @@ async function logout() {
           <span>{{ tab.icon }}</span>{{ tab.label }}
         </router-link>
         <button @click="logout" class="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-gray-800 lg:mt-auto">
-          🚪 Hivoaka
+          🚪 Se déconnecter
         </button>
       </nav>
     </aside>
