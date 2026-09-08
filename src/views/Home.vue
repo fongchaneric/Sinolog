@@ -12,7 +12,6 @@ const loading = ref(true)
 const loadingMore = ref(false)
 const error = ref('')
 const products = ref([])
-const noMore = ref(false)
 const sentinel = ref(null)
 let observer = null
 let keywordCursor = 0
@@ -22,14 +21,15 @@ let keywordCursor = 0
 const trendingKeywords = ['手机壳', '钥匙扣', '数据线', '内存卡', '蓝牙耳机', '充电宝']
 
 // Leans the trending grid toward the buyer's own last few searches once
-// they have any, cycling through them one at a time per batch; falls back
-// to the server's own random default keyword when there's no history yet.
+// they have any, but not exclusively - every third batch falls back to
+// the server's own generic default keyword so the grid isn't 100% just
+// their history.
 function nextKeyword() {
   const recent = getRecentSearches()
   if (!recent.length) return undefined
-  const kw = recent[keywordCursor % recent.length]
   keywordCursor++
-  return kw
+  if (keywordCursor % 3 === 0) return undefined
+  return recent[keywordCursor % recent.length]
 }
 
 async function loadBatch(isInitial) {
@@ -37,19 +37,16 @@ async function loadBatch(isInitial) {
     loading.value = true
     error.value = ''
   } else {
-    if (loading.value || loadingMore.value || noMore.value) return
+    if (loading.value || loadingMore.value) return
     loadingMore.value = true
   }
   try {
     const data = await getTrendingProducts(nextKeyword())
-    if (!data.items.length) {
-      noMore.value = true
-    } else {
-      products.value = isInitial ? data.items : [...products.value, ...data.items]
-    }
+    products.value = isInitial ? data.items : [...products.value, ...data.items]
   } catch (e) {
     if (isInitial) error.value = e.message
-    // A failed "load more" attempt just stays quiet - the grid already has content.
+    // A failed "load more" attempt just stays quiet - the grid already has content,
+    // and the next scroll trigger will simply try again.
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -120,7 +117,7 @@ onUnmounted(() => {
       </div>
 
       <div ref="sentinel" class="h-1" />
-      <div v-if="loadingMore" class="flex flex-col items-center py-6 gap-2 text-gray-400 text-sm">
+      <div v-if="loadingMore" class="flex flex-col items-center py-3 gap-1.5 text-gray-400 text-sm">
         <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
         <span>Loading...</span>
       </div>
