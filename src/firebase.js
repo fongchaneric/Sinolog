@@ -12,8 +12,8 @@ if (!projectId) missing.push('VITE_FIREBASE_PROJECT_ID (or FIREBASE_PROJECT_ID)'
 if (!databaseURL) missing.push('VITE_FIREBASE_DATABASE_URL (or FIREBASE_DATABASE_URL)')
 if (missing.length) {
   throw new Error(
-    `Firebase non configuré : variable(s) manquante(s) - ${missing.join(', ')}. ` +
-      'Ajoutez-les dans les Environment Variables (Vercel) ou .env.local, puis redéployez.'
+    `Firebase not configured: missing variable(s) - ${missing.join(', ')}. ` +
+      'Add them in the Environment Variables (Vercel) or .env.local, then redeploy.'
   )
 }
 

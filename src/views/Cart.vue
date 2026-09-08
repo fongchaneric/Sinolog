@@ -20,14 +20,14 @@ function checkout() {
 
 <template>
   <div class="max-w-3xl mx-auto px-2 py-3 pb-28">
-    <h1 class="text-lg font-bold text-gray-800 px-1 mb-2">Panier ({{ cartStore.count }})</h1>
+    <h1 class="text-lg font-bold text-gray-800 px-1 mb-2">Cart ({{ cartStore.count }})</h1>
 
-    <div v-if="!cartStore.loaded" class="text-center text-gray-400 py-16">Chargement...</div>
+    <div v-if="!cartStore.loaded" class="text-center text-gray-400 py-16">Loading...</div>
 
     <div v-else-if="!lines.length" class="text-center text-gray-400 py-20">
       <p class="text-4xl mb-2">🛒</p>
-      <p>Votre panier est vide</p>
-      <router-link to="/" class="btn-brand inline-block mt-4">Rechercher des produits</router-link>
+      <p>Your cart is empty</p>
+      <router-link to="/" class="btn-brand inline-block mt-4">Find products</router-link>
     </div>
 
     <div v-else class="space-y-2">
@@ -57,7 +57,7 @@ function checkout() {
         <p class="text-xs text-gray-400">Total</p>
         <p class="text-brand font-bold text-lg">{{ formatYuan(cartStore.totalYuan) }}</p>
       </div>
-      <button class="btn-brand !px-8 !py-3" @click="checkout">Commander ({{ cartStore.count }})</button>
+      <button class="btn-brand !px-8 !py-3" @click="checkout">Order ({{ cartStore.count }})</button>
     </div>
   </div>
 </template>

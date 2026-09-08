@@ -2,7 +2,7 @@ async function request(path) {
   const res = await fetch(path)
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(data.error || `Erreur (${res.status})`)
+    throw new Error(data.error || `Error (${res.status})`)
   }
   return data
 }
@@ -29,6 +29,6 @@ export async function updateOrderStatus(idToken, { orderId, status, adminNote })
     body: JSON.stringify({ orderId, status, adminNote })
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || `Erreur (${res.status})`)
+  if (!res.ok) throw new Error(data.error || `Error (${res.status})`)
   return data
 }

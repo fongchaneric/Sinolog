@@ -37,8 +37,8 @@ onMounted(load)
 <template>
   <div class="max-w-7xl mx-auto px-2 py-3">
     <p class="text-sm text-gray-500 mb-2">
-      Résultats pour "<span class="font-semibold text-gray-700">{{ route.query.q }}</span>"
-      <span v-if="total">— {{ total }} produits</span>
+      Results for "<span class="font-semibold text-gray-700">{{ route.query.q }}</span>"
+      <span v-if="total">— {{ total }} products</span>
     </p>
 
     <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 tv:grid-cols-6 gap-2">
@@ -47,11 +47,11 @@ onMounted(load)
 
     <div v-else-if="error" class="text-center text-sm text-gray-500 py-16">
       <p>{{ error }}</p>
-      <button class="btn-brand mt-4" @click="load">Réessayer</button>
+      <button class="btn-brand mt-4" @click="load">Try again</button>
     </div>
 
     <div v-else-if="!items.length" class="text-center text-sm text-gray-400 py-16">
-      Aucun produit trouvé. Essayez un autre mot-clé.
+      No products found. Try another keyword.
     </div>
 
     <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 tv:grid-cols-6 gap-2">

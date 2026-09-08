@@ -28,13 +28,13 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
 
 <template>
   <div class="max-w-2xl mx-auto px-3 py-4">
-    <div v-if="!loaded" class="text-center text-gray-400 py-16">Recherche en cours...</div>
-    <div v-else-if="!order" class="text-center text-gray-400 py-16">Commande introuvable</div>
+    <div v-if="!loaded" class="text-center text-gray-400 py-16">Loading...</div>
+    <div v-else-if="!order" class="text-center text-gray-400 py-16">Order not found</div>
 
     <div v-else class="space-y-3">
       <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
-          <p class="font-bold text-gray-800">Commande #{{ order.id.slice(-6).toUpperCase() }}</p>
+          <p class="font-bold text-gray-800">Order #{{ order.id.slice(-6).toUpperCase() }}</p>
           <span class="text-xs px-2.5 py-1 rounded-full" :class="statusMeta(order.status).color">{{ statusMeta(order.status).label }}</span>
         </div>
 
@@ -55,7 +55,7 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Produits</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Products</p>
         <div v-for="(line, i) in order.items" :key="i" class="flex gap-3 py-2 border-b last:border-0 border-gray-100">
           <img :src="proxyImage(line.image)" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
@@ -74,12 +74,12 @@ const STEPS = ['pending', 'confirmed', 'purchasing', 'shipped', 'completed']
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Paiement</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Payment</p>
         <div class="text-sm text-gray-600 space-y-1">
-          <p>Méthode : <span class="font-medium capitalize">{{ order.paymentMethod }}</span></p>
-          <p>Numéro d'envoi : <span class="font-medium">{{ order.senderPhone }}</span></p>
-          <p>Référence : <span class="font-medium">{{ order.paymentReference }}</span></p>
-          <p v-if="order.deliveryAddress">Adresse : <span class="font-medium">{{ order.deliveryAddress }}</span></p>
+          <p>Method: <span class="font-medium capitalize">{{ order.paymentMethod }}</span></p>
+          <p>Sending number: <span class="font-medium">{{ order.senderPhone }}</span></p>
+          <p>Reference: <span class="font-medium">{{ order.paymentReference }}</span></p>
+          <p v-if="order.deliveryAddress">Address: <span class="font-medium">{{ order.deliveryAddress }}</span></p>
         </div>
       </div>
     </div>

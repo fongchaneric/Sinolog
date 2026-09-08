@@ -43,15 +43,15 @@ async function setStatus(status) {
 
 <template>
   <div class="p-4 lg:p-6 max-w-2xl">
-    <router-link :to="{ name: 'admin-orders' }" class="text-sm text-gray-400 mb-3 inline-block">‹ Retour</router-link>
+    <router-link :to="{ name: 'admin-orders' }" class="text-sm text-gray-400 mb-3 inline-block">‹ Back</router-link>
 
-    <div v-if="!loaded" class="text-center text-gray-400 py-16">Recherche en cours...</div>
-    <div v-else-if="!order" class="text-center text-gray-400 py-16">Commande introuvable</div>
+    <div v-if="!loaded" class="text-center text-gray-400 py-16">Loading...</div>
+    <div v-else-if="!order" class="text-center text-gray-400 py-16">Order not found</div>
 
     <div v-else class="space-y-3">
       <div class="card p-4">
         <div class="flex items-center justify-between mb-2">
-          <p class="font-bold text-gray-800">Commande #{{ order.id.slice(-6).toUpperCase() }}</p>
+          <p class="font-bold text-gray-800">Order #{{ order.id.slice(-6).toUpperCase() }}</p>
           <span class="text-xs px-2.5 py-1 rounded-full" :class="statusMeta(order.status).color">{{ statusMeta(order.status).label }}</span>
         </div>
         <p class="text-sm text-gray-600">👤 {{ order.userName || order.userEmail }} ({{ order.userEmail }})</p>
@@ -59,24 +59,24 @@ async function setStatus(status) {
       </div>
 
       <div class="card p-4 bg-amber-50 border border-amber-100">
-        <p class="text-sm font-semibold text-amber-800 mb-2">💳 Détails du paiement</p>
+        <p class="text-sm font-semibold text-amber-800 mb-2">💳 Payment Details</p>
         <div class="text-sm text-amber-900 space-y-1">
-          <p>Méthode : <span class="font-semibold capitalize">{{ order.paymentMethod }}</span> ({{ order.paymentPhoneTo }})</p>
-          <p>Numéro d'envoi du client : <span class="font-semibold">{{ order.senderPhone }}</span></p>
-          <p>Référence : <span class="font-semibold">{{ order.paymentReference }}</span></p>
-          <p v-if="order.deliveryAddress">Adresse : <span class="font-semibold">{{ order.deliveryAddress }}</span></p>
+          <p>Method: <span class="font-semibold capitalize">{{ order.paymentMethod }}</span> ({{ order.paymentPhoneTo }})</p>
+          <p>Customer's sending number: <span class="font-semibold">{{ order.senderPhone }}</span></p>
+          <p>Reference: <span class="font-semibold">{{ order.paymentReference }}</span></p>
+          <p v-if="order.deliveryAddress">Address: <span class="font-semibold">{{ order.deliveryAddress }}</span></p>
         </div>
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Produits</p>
+        <p class="text-sm font-semibold text-gray-700 mb-2">Products</p>
         <div v-for="(line, i) in order.items" :key="i" class="flex gap-3 py-2 border-b last:border-0 border-gray-100">
           <img :src="proxyImage(line.image)" class="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div class="flex-1 min-w-0">
             <p class="text-sm text-gray-800 line-clamp-2">{{ line.title }}</p>
             <p v-if="line.variantLabel" class="text-xs text-gray-400">{{ line.variantLabel }}</p>
             <p class="text-xs text-gray-500 mt-1">{{ formatYuan(line.price) }} × {{ line.quantity }}</p>
-            <a v-if="line.link" :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 Voir la source</a>
+            <a v-if="line.link" :href="line.link" target="_blank" rel="noopener" class="text-[11px] text-brand">🔗 View source</a>
           </div>
         </div>
         <div class="flex justify-between font-bold pt-2">
@@ -89,8 +89,8 @@ async function setStatus(status) {
       </div>
 
       <div class="card p-4">
-        <p class="text-sm font-semibold text-gray-700 mb-2">Modifier le statut</p>
-        <textarea v-model="note" rows="2" placeholder="Note pour le client (optionnel)" class="input-field resize-none mb-3" />
+        <p class="text-sm font-semibold text-gray-700 mb-2">Update status</p>
+        <textarea v-model="note" rows="2" placeholder="Note for the customer (optional)" class="input-field resize-none mb-3" />
         <div class="grid grid-cols-2 gap-2">
           <button
             v-for="(meta, key) in STATUS_META"

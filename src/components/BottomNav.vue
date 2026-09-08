@@ -9,10 +9,10 @@ const cartStore = useCartStore()
 const authStore = useAuthStore()
 
 const tabs = [
-  { name: 'home', label: 'Accueil', icon: 'home', to: { name: 'home' } },
-  { name: 'orders', label: 'Commandes', icon: 'orders', to: { name: 'orders' } },
-  { name: 'cart', label: 'Panier', icon: 'cart', to: { name: 'cart' } },
-  { name: 'account', label: 'Compte', icon: 'user', to: { name: 'account' } }
+  { name: 'home', label: 'Home', icon: 'home', to: { name: 'home' } },
+  { name: 'orders', label: 'Message', icon: 'orders', to: { name: 'orders' } },
+  { name: 'cart', label: 'Cart', icon: 'cart', to: { name: 'cart' } },
+  { name: 'account', label: 'Me', icon: 'user', to: { name: 'account' } }
 ]
 
 const active = computed(() => route.name)
