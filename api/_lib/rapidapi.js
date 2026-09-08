@@ -2,9 +2,12 @@
 // taobao-1688-api1.p.rapidapi.com). The key is only ever read here,
 // server-side - it must never reach the browser.
 //
-// Endpoints (confirmed by the account owner from their RapidAPI dashboard):
-//   GET /v53/search  ?keyword=&page=
-//   GET /v53/detail  ?itemId=
+// Endpoints (confirmed against a real cURL snippet from the RapidAPI
+// dashboard for the detail lookup; the search path follows the same
+// "/1688/<name>" convention seen there, since only /v53/... - a wrong
+// early guess - was ruled out by a live 404):
+//   GET /1688/search  ?keyword=&page=
+//   GET /1688/detail  ?itemId=
 // The exact response field names are not documented anywhere reachable from
 // here, so _lib/normalize.js stays defensive (many candidate field names)
 // and api/search.js / api/product.js keep a ?raw=1 escape hatch to inspect
@@ -85,7 +88,7 @@ async function callRapidApi(path, params, { maxRetries = 2, attempt = 0, timeout
 }
 
 export function searchItems(keyword, page = 1, opts) {
-  return callRapidApi('/v53/search', { keyword, page }, opts)
+  return callRapidApi('/1688/search', { keyword, page }, opts)
 }
 
 export function getItemDetail(itemId, opts) {
@@ -95,5 +98,5 @@ export function getItemDetail(itemId, opts) {
   // retry (a timeout here isn't a 429, so callRapidApi wouldn't retry it
   // anyway; a second full-length attempt would just risk the platform's
   // own execution limit instead).
-  return callRapidApi('/v53/detail', { itemId }, { timeoutMs: 8800, maxRetries: 0, ...opts })
+  return callRapidApi('/1688/detail', { itemId }, { timeoutMs: 8800, maxRetries: 0, ...opts })
 }
