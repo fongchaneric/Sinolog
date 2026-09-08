@@ -1,5 +1,6 @@
 import { searchItems } from './_lib/rapidapi.js'
 import { normalizeSearchResponse } from './_lib/normalize.js'
+import { getCachedSearch, setCachedSearch } from './_lib/searchCache.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -33,10 +34,26 @@ export default async function handler(req, res) {
     }
 
     const normalized = normalizeSearchResponse(raw, keyword, page)
+    if (page === '1' && normalized.items.length) {
+      await setCachedSearch(keyword, normalized)
+    }
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=600')
     res.status(200).json(normalized)
   } catch (err) {
     console.error('search error', err)
+
+    // The RapidAPI plan in use is rate-limited (and occasionally slow), so
+    // a live failure shouldn't leave the buyer looking at an empty page -
+    // fall back to the last successful result for this exact keyword.
+    if (page === '1') {
+      const cached = await getCachedSearch(keyword)
+      if (cached) {
+        res.setHeader('Cache-Control', 'no-store')
+        res.status(200).json({ ...cached, stale: true })
+        return
+      }
+    }
+
     if (err.rateLimited) {
       res.status(429).json({ error: err.message })
       return
