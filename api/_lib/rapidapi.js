@@ -2,12 +2,11 @@
 // taobao-1688-api1.p.rapidapi.com). The key is only ever read here,
 // server-side - it must never reach the browser.
 //
-// Endpoints (confirmed against a real cURL snippet from the RapidAPI
-// dashboard for the detail lookup; the search path follows the same
-// "/1688/<name>" convention seen there, since only /v53/... - a wrong
-// early guess - was ruled out by a live 404):
-//   GET /1688/search  ?keyword=&page=
-//   GET /1688/detail  ?itemId=
+// Endpoints (both confirmed against real cURL snippets pulled from the
+// RapidAPI dashboard - two earlier guesses, /v53/... and /1688/search,
+// were both ruled out by live 404s before these were found):
+//   GET /1688/search-keyword  ?keyword=&page=
+//   GET /1688/detail          ?itemId=
 // The exact response field names are not documented anywhere reachable from
 // here, so _lib/normalize.js stays defensive (many candidate field names)
 // and api/search.js / api/product.js keep a ?raw=1 escape hatch to inspect
@@ -88,7 +87,7 @@ async function callRapidApi(path, params, { maxRetries = 2, attempt = 0, timeout
 }
 
 export function searchItems(keyword, page = 1, opts) {
-  return callRapidApi('/1688/search', { keyword, page }, opts)
+  return callRapidApi('/1688/search-keyword', { keyword, page }, opts)
 }
 
 export function getItemDetail(itemId, opts) {
