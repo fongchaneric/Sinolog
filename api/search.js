@@ -1,4 +1,4 @@
-import { searchItems } from './_lib/justoneapi.js'
+import { searchItems } from './_lib/rapidapi.js'
 import { normalizeSearchResponse } from './_lib/normalize.js'
 
 export default async function handler(req, res) {
@@ -18,10 +18,10 @@ export default async function handler(req, res) {
   try {
     const raw = await searchItems(keyword, page)
 
-    // Temporary diagnostic escape hatch: ?raw=1 returns JustOneAPI's
+    // Temporary diagnostic escape hatch: ?raw=1 returns RapidAPI's
     // untouched response so the field-name mapping in _lib/normalize.js
     // can be corrected against the real payload shape. Safe to keep - it
-    // never touches the token, only what JustOneAPI already sent back.
+    // never touches the key, only what RapidAPI already sent back.
     if (req.query.raw === '1') {
       res.setHeader('Cache-Control', 'no-store')
       res.status(200).json(raw)

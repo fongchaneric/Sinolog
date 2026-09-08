@@ -1,10 +1,12 @@
-// JustOneAPI wraps its 1688 search results in Taobao/1688's own internal
-// "smart_ui_offer" cell shape: { trackInfo, cellType, data: { offerId,
-// title, priceInfo, odPicUrl, shop, afterPrice, shopAddition, ... } }.
-// The real product fields live one level deeper, under `.data` - confirmed
-// against a live response captured via the api/search?raw=1 escape hatch.
-// These helpers stay defensive (multiple candidate field names) so small
-// variations - e.g. between the search and detail endpoints - don't break.
+// The upstream (RapidAPI's taobao-1688-api1, /v53/search and /v53/detail)
+// doesn't have reachable field-level documentation, so these helpers stay
+// defensive: every field is looked up under a list of candidate names,
+// including both plain Taobao/1688 scraper conventions (num_iid, pic_url,
+// promotion_price, seller_nick...) and the "smart_ui_offer" cell shape seen
+// from a previous provider (offerId, priceInfo, odPicUrl, shop.text...),
+// in case either turns up in the real response. Use api/search?raw=1 or
+// api/product?raw=1 to inspect the actual payload and correct any mapping
+// that turns out wrong.
 
 function pick(obj, candidates) {
   if (!obj || typeof obj !== 'object') return undefined
@@ -80,7 +82,7 @@ export function normalizeItem(rawEntry) {
   const rawTitle = pick(raw, ['title', 'subject', 'item_title', 'itemTitle', 'name', 'productName'])
   const title = stripHtml(rawTitle)
 
-  let image = pick(raw, ['odPicUrl', 'image', 'imgUrl', 'img_url', 'pic_url', 'picUrl', 'main_image', 'mainImage', 'image_url', 'imageUrl'])
+  let image = pick(raw, ['odPicUrl', 'image', 'imgUrl', 'img_url', 'pic_url', 'picUrl', 'pic', 'main_image', 'mainImage', 'image_url', 'imageUrl'])
   if (!image) {
     const offerPic = pick(raw, ['offerPicUrl', 'pictureUrl'])
     if (offerPic) image = String(offerPic).split(',')[0].trim()
@@ -89,19 +91,19 @@ export function normalizeItem(rawEntry) {
   const priceInfo = raw.priceInfo && typeof raw.priceInfo === 'object' ? raw.priceInfo : null
   const rawPrice = priceInfo
     ? pick(priceInfo, ['price'])
-    : pick(raw, ['price', 'promotion_price', 'promotionPrice', 'discount_price', 'min_price'])
+    : pick(raw, ['price', 'promotion_price', 'promotionPrice', 'discount_price', 'min_price', 'view_price', 'zk_final_price'])
 
   const afterPriceText = raw.afterPrice && typeof raw.afterPrice === 'object' ? pick(raw.afterPrice, ['text']) : null
-  const sales = parseChineseCount(afterPriceText) ?? toNumber(pick(raw, ['bookedCount', 'sales', 'sold', 'sold_quantity', 'trade_count']))
+  const sales = parseChineseCount(afterPriceText) ?? toNumber(pick(raw, ['bookedCount', 'sales', 'sold', 'sold_quantity', 'trade_count', 'sales_count', 'volume']))
 
   const tradeService = raw.shopAddition?.tradeService
   const rating = toNumber(tradeService ? pick(tradeService, ['compositeNewScore', 'goodsScore']) : pick(raw, ['rating', 'score', 'star']))
 
   const shopName =
     (raw.shop && typeof raw.shop === 'object' ? pick(raw.shop, ['text']) : null) ||
-    pick(raw, ['shop_name', 'shopName', 'seller_nick', 'company_name', 'company'])
+    pick(raw, ['shop_name', 'shopName', 'seller_nick', 'nick', 'company_name', 'company'])
 
-  const link = pick(raw, ['linkUrl', 'detail_url', 'detailUrl', 'url', 'landing_url', 'item_url'])
+  const link = pick(raw, ['linkUrl', 'detail_url', 'detailUrl', 'url', 'landing_url', 'item_url', 'click_url', 'product_url'])
 
   const quantityPrices = raw.shopAddition?.quantityPrices
   const moqFromTier = Array.isArray(quantityPrices) && quantityPrices.length ? parseMoqFromTier(pick(quantityPrices[0], ['quantity'])) : null
@@ -129,7 +131,7 @@ export function normalizeItem(rawEntry) {
 export function normalizeSearchResponse(raw, keyword, page) {
   const array = findFirstArray(raw) || []
   const items = array.map(normalizeItem).filter(Boolean)
-  const total = raw?.data?.data?.found ?? pick(raw, ['total', 'totalResults', 'total_results', 'totalCount', 'total_count'])
+  const total = raw?.data?.data?.found ?? pick(raw, ['total', 'totalResults', 'total_results', 'totalCount', 'total_count', 'total_results_count'])
   return {
     keyword,
     page: Number(page) || 1,

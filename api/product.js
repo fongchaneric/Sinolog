@@ -1,4 +1,4 @@
-import { getItemDetail } from './_lib/justoneapi.js'
+import { getItemDetail } from './_lib/rapidapi.js'
 import { normalizeDetailResponse } from './_lib/normalize.js'
 
 export default async function handler(req, res) {
