@@ -15,6 +15,10 @@ export function getProductDetail(itemId) {
   return request(`/api/product?itemId=${encodeURIComponent(itemId)}`)
 }
 
+export function getTrendingProducts() {
+  return request('/api/trending')
+}
+
 export async function updateOrderStatus(idToken, { orderId, status, adminNote }) {
   const res = await fetch('/api/orders/update-status', {
     method: 'POST',

@@ -11,7 +11,15 @@ function getToken() {
   return token
 }
 
-async function callJustOneApi(path, params) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// JustOneAPI enforces a strict per-second rate limit and answers with
+// HTTP 429 + {"message":"TOO FAST"} when it's exceeded. A couple of short
+// retries smooths over that without the caller ever seeing it, as long as
+// requests aren't fired in a big burst (see api/trending.js for that).
+async function callJustOneApi(path, params, { maxRetries = 2, attempt = 0, timeoutMs = 8000 } = {}) {
   const token = getToken()
   const url = new URL(`${BASE}${path}`)
   url.searchParams.set('token', token)
@@ -21,7 +29,17 @@ async function callJustOneApi(path, params) {
     }
   }
 
-  const res = await fetch(url.toString())
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  let res
+  try {
+    res = await fetch(url.toString(), { signal: controller.signal })
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('JustOneAPI timed out')
+    throw err
+  } finally {
+    clearTimeout(timeout)
+  }
   const text = await res.text()
   let json
   try {
@@ -29,14 +47,26 @@ async function callJustOneApi(path, params) {
   } catch {
     throw new Error(`JustOneAPI returned a non-JSON response (status ${res.status})`)
   }
+
+  if (res.status === 429 && attempt < maxRetries) {
+    await sleep(900 * (attempt + 1))
+    return callJustOneApi(path, params, { maxRetries, attempt: attempt + 1, timeoutMs })
+  }
+
+  if (res.status === 429) {
+    const err = new Error('Be loatra ny fangatahana amin\'izao fotoana izao, andramo indray afaka kelikely')
+    err.rateLimited = true
+    throw err
+  }
+
   if (!res.ok) {
     throw new Error(`JustOneAPI request failed with status ${res.status}: ${text.slice(0, 300)}`)
   }
   return json
 }
 
-export function searchItems(keyword, page = 1) {
-  return callJustOneApi('/search-item-list/v1', { keyword, page })
+export function searchItems(keyword, page = 1, opts) {
+  return callJustOneApi('/search-item-list/v1', { keyword, page }, opts)
 }
 
 export function getItemDetail(itemId) {

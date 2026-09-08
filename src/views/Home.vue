@@ -4,25 +4,23 @@ import { useRouter } from 'vue-router'
 import Banner from '../components/Banner.vue'
 import QuickLinks from '../components/QuickLinks.vue'
 import ProductCard from '../components/ProductCard.vue'
-import { searchProducts } from '../utils/api'
+import { getTrendingProducts } from '../utils/api'
 
 const router = useRouter()
 const loading = ref(true)
 const error = ref('')
 const products = ref([])
 
+// Quick-search shortcuts shown as chips - each tap does a single normal
+// search, so this list can be broader than the server's trending set.
 const trendingKeywords = ['手机壳', '钥匙扣', '数据线', '内存卡', '蓝牙耳机', '充电宝']
 
 async function loadTrending() {
   loading.value = true
   error.value = ''
   try {
-    const results = await Promise.allSettled(trendingKeywords.map((k) => searchProducts(k)))
-    const merged = []
-    for (const r of results) {
-      if (r.status === 'fulfilled') merged.push(...r.value.items.slice(0, 4))
-    }
-    products.value = merged
+    const data = await getTrendingProducts()
+    products.value = data.items
   } catch (e) {
     error.value = e.message
   } finally {
