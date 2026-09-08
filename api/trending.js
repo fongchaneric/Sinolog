@@ -20,7 +20,9 @@ export default async function handler(req, res) {
   const keyword = KEYWORDS[Math.floor(Date.now() / CACHE_WINDOW_MS) % KEYWORDS.length]
 
   try {
-    const raw = await searchItems(keyword, 1, { maxRetries: 1, timeoutMs: 8000 })
+    // Same split-budget reasoning as api/search.js: the upstream is
+    // intermittently slow, so two shorter attempts beat one long one.
+    const raw = await searchItems(keyword, 1, { maxRetries: 1, timeoutMs: 6000 })
     const normalized = normalizeSearchResponse(raw, keyword, 1)
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=3600')
     res.status(200).json({ items: normalized.items.slice(0, ITEMS_LIMIT) })

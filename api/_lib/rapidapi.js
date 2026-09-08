@@ -54,7 +54,18 @@ async function callRapidApi(path, params, { maxRetries = 2, attempt = 0, timeout
       }
     })
   } catch (err) {
-    if (err.name === 'AbortError') throw new Error('RapidAPI timed out')
+    if (err.name === 'AbortError') {
+      // The upstream is intermittently slow rather than consistently down
+      // (confirmed: the same call succeeds seconds later), so a second,
+      // shorter attempt often gets through where a single long wait
+      // wouldn't - as long as the combined time stays under Vercel's own
+      // ~10s function execution cap.
+      if (attempt < maxRetries) {
+        const nextTimeout = Math.max(2500, timeoutMs - 3000)
+        return callRapidApi(path, params, { maxRetries, attempt: attempt + 1, timeoutMs: nextTimeout })
+      }
+      throw new Error('RapidAPI timed out')
+    }
     throw err
   } finally {
     clearTimeout(timeout)
@@ -92,10 +103,9 @@ export function searchItems(keyword, page = 1, opts) {
 
 export function getItemDetail(itemId, opts) {
   // Detail lookups return far more data (images, SKU trees, description)
-  // than a search row and are typically slower upstream - give it more of
-  // the function's time budget than the default, and don't burn time on a
-  // retry (a timeout here isn't a 429, so callRapidApi wouldn't retry it
-  // anyway; a second full-length attempt would just risk the platform's
-  // own execution limit instead).
+  // than a search row and are typically slower upstream - give the single
+  // attempt most of the function's time budget instead of splitting it
+  // into a retry, since a second full-length attempt would risk the
+  // platform's own execution limit.
   return callRapidApi('/1688/detail', { itemId }, { timeoutMs: 8800, maxRetries: 0, ...opts })
 }
