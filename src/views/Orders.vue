@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import { useAuthStore } from '../stores/auth'
 import { statusMeta } from '../utils/orderStatus'
 import { formatYuan } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 
 const authStore = useAuthStore()
 const orderIds = ref([])
@@ -59,7 +60,7 @@ onUnmounted(() => {
         :to="{ name: 'order-detail', params: { orderId: o.id } }"
         class="card p-3 flex items-center gap-3"
       >
-        <img :src="o.items?.[0]?.image" class="w-16 h-16 rounded-lg object-cover bg-gray-100 shrink-0" />
+        <img :src="proxyImage(o.items?.[0]?.image)" class="w-16 h-16 rounded-lg object-cover bg-gray-100 shrink-0" />
         <div class="flex-1 min-w-0">
           <p class="text-sm text-gray-800 line-clamp-1">{{ o.items?.[0]?.title }}<span v-if="o.items?.length > 1"> +{{ o.items.length - 1 }} hafa</span></p>
           <p class="text-xs text-gray-400 mt-1">{{ new Date(o.createdAt).toLocaleDateString('fr-FR') }}</p>

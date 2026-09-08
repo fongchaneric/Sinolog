@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore, lineKey } from '../stores/cart'
 import { formatYuan, formatMga } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -31,7 +32,7 @@ function checkout() {
 
     <div v-else class="space-y-2">
       <div v-for="line in lines" :key="line.key" class="card p-3 flex gap-3">
-        <img :src="line.image" class="w-20 h-20 rounded-lg object-cover bg-gray-100 shrink-0" />
+        <img :src="proxyImage(line.image)" class="w-20 h-20 rounded-lg object-cover bg-gray-100 shrink-0" />
         <div class="flex-1 min-w-0 flex flex-col">
           <p class="text-sm text-gray-800 line-clamp-2">{{ line.title }}</p>
           <p v-if="line.variantLabel" class="text-xs text-gray-400 mt-0.5">{{ line.variantLabel }}</p>

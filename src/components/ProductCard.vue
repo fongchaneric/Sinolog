@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatYuan, formatUsd } from '../utils/currency'
+import { proxyImage } from '../utils/image'
 
 const props = defineProps({
   product: { type: Object, required: true }
@@ -24,7 +25,7 @@ const soldLabel = computed(() => {
   >
     <div class="aspect-square bg-gray-100 overflow-hidden">
       <img
-        :src="product.image || fallbackImg"
+        :src="proxyImage(product.image) || fallbackImg"
         :alt="product.title"
         loading="lazy"
         class="w-full h-full object-cover"
