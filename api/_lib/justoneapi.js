@@ -62,6 +62,17 @@ async function callJustOneApi(path, params, { maxRetries = 2, attempt = 0, timeo
   if (!res.ok) {
     throw new Error(`JustOneAPI request failed with status ${res.status}: ${text.slice(0, 300)}`)
   }
+
+  // JustOneAPI reports some failures (e.g. an empty account balance, an
+  // invalid token) with a normal HTTP 200 status but data: null and a
+  // business-level message/code in the body. Treat that as an error too,
+  // instead of silently letting it flow through as "0 products found".
+  if (json && typeof json === 'object' && json.data === null && json.message) {
+    const err = new Error(`JustOneAPI: ${json.message} (code ${json.code})`)
+    err.upstreamBusinessError = true
+    throw err
+  }
+
   return json
 }
 
