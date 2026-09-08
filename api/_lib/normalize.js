@@ -1,7 +1,10 @@
-// JustOneAPI's exact response shape can vary between endpoints/plans.
-// These helpers pick the first matching field name out of a list of
-// candidates, so if the live response uses slightly different keys than
-// expected you only need to add a candidate here rather than rewrite the UI.
+// JustOneAPI wraps its 1688 search results in Taobao/1688's own internal
+// "smart_ui_offer" cell shape: { trackInfo, cellType, data: { offerId,
+// title, priceInfo, odPicUrl, shop, afterPrice, shopAddition, ... } }.
+// The real product fields live one level deeper, under `.data` - confirmed
+// against a live response captured via the api/search?raw=1 escape hatch.
+// These helpers stay defensive (multiple candidate field names) so small
+// variations - e.g. between the search and detail endpoints - don't break.
 
 function pick(obj, candidates) {
   if (!obj || typeof obj !== 'object') return undefined
@@ -16,6 +19,34 @@ function toNumber(value) {
   if (typeof value === 'number') return value
   const match = String(value).match(/[\d.]+/)
   return match ? parseFloat(match[0]) : null
+}
+
+function stripHtml(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Sales/booking counters on 1688 are Chinese-formatted strings like
+// "全网10万+件" (100,000+) or "已售2800+件" (2,800+) - extract a plain number.
+function parseChineseCount(text) {
+  if (!text) return null
+  const str = String(text)
+  const wan = str.match(/([\d.]+)\s*万/)
+  if (wan) return Math.round(parseFloat(wan[1]) * 10000)
+  const num = str.match(/[\d,]+/)
+  if (num) return parseInt(num[0].replace(/,/g, ''), 10)
+  return null
+}
+
+// First wholesale tier's quantity string (e.g. "50~499个", "≥1000个") gives
+// a reasonable minimum order quantity when no explicit MOQ field exists.
+function parseMoqFromTier(quantityText) {
+  if (!quantityText) return null
+  const match = String(quantityText).match(/[\d.]+/)
+  return match ? parseInt(match[0], 10) : null
 }
 
 function findFirstArray(node, depth = 0) {
@@ -38,19 +69,44 @@ function findFirstArray(node, depth = 0) {
   return null
 }
 
-export function normalizeItem(raw) {
-  if (!raw || typeof raw !== 'object') return null
+export function normalizeItem(rawEntry) {
+  if (!rawEntry || typeof rawEntry !== 'object') return null
 
-  const itemId = pick(raw, ['itemId', 'item_id', 'num_iid', 'numIid', 'offerId', 'offer_id', 'id', 'productId'])
-  const title = pick(raw, ['title', 'subject', 'item_title', 'itemTitle', 'name', 'productName'])
-  const image = pick(raw, ['image', 'imgUrl', 'img_url', 'pic_url', 'picUrl', 'main_image', 'mainImage', 'image_url', 'imageUrl', 'pictureUrl'])
-  const rawPrice = pick(raw, ['price', 'promotion_price', 'promotionPrice', 'discount_price', 'discountPrice', 'min_price', 'minPrice'])
-  const priceMax = pick(raw, ['max_price', 'maxPrice', 'origin_price', 'originPrice'])
-  const sales = pick(raw, ['sales', 'sale_count', 'saleCount', 'sold', 'sold_quantity', 'soldQuantity', 'month_sold', 'monthSold', 'biz30day', 'trade_count', 'tradeCount'])
-  const rating = pick(raw, ['rating', 'score', 'seller_rating', 'sellerRating', 'evaluate_rate', 'evaluateRate', 'star'])
-  const shopName = pick(raw, ['shop_name', 'shopName', 'seller_nick', 'sellerNick', 'company_name', 'companyName', 'shopTitle', 'shop_title'])
-  const link = pick(raw, ['detail_url', 'detailUrl', 'url', 'item_url', 'itemUrl', 'productUrl', 'product_url'])
-  const moq = pick(raw, ['moq', 'min_order_quantity', 'minOrderQuantity', 'batch_number', 'batchNumber'])
+  // Unwrap the 1688 "smart_ui_offer" cell wrapper when present.
+  const inner = rawEntry.data
+  const raw = inner && typeof inner === 'object' && (inner.offerId || inner.title) ? inner : rawEntry
+
+  const itemId = pick(raw, ['offerId', 'itemId', 'item_id', 'num_iid', 'numIid', 'id', 'productId'])
+  const rawTitle = pick(raw, ['title', 'subject', 'item_title', 'itemTitle', 'name', 'productName'])
+  const title = stripHtml(rawTitle)
+
+  let image = pick(raw, ['odPicUrl', 'image', 'imgUrl', 'img_url', 'pic_url', 'picUrl', 'main_image', 'mainImage', 'image_url', 'imageUrl'])
+  if (!image) {
+    const offerPic = pick(raw, ['offerPicUrl', 'pictureUrl'])
+    if (offerPic) image = String(offerPic).split(',')[0].trim()
+  }
+
+  const priceInfo = raw.priceInfo && typeof raw.priceInfo === 'object' ? raw.priceInfo : null
+  const rawPrice = priceInfo
+    ? pick(priceInfo, ['price'])
+    : pick(raw, ['price', 'promotion_price', 'promotionPrice', 'discount_price', 'min_price'])
+
+  const afterPriceText = raw.afterPrice && typeof raw.afterPrice === 'object' ? pick(raw.afterPrice, ['text']) : null
+  const sales = parseChineseCount(afterPriceText) ?? toNumber(pick(raw, ['bookedCount', 'sales', 'sold', 'sold_quantity', 'trade_count']))
+
+  const tradeService = raw.shopAddition?.tradeService
+  const rating = toNumber(tradeService ? pick(tradeService, ['compositeNewScore', 'goodsScore']) : pick(raw, ['rating', 'score', 'star']))
+
+  const shopName =
+    (raw.shop && typeof raw.shop === 'object' ? pick(raw.shop, ['text']) : null) ||
+    pick(raw, ['shop_name', 'shopName', 'seller_nick', 'company_name', 'company'])
+
+  const link = pick(raw, ['linkUrl', 'detail_url', 'detailUrl', 'url', 'landing_url', 'item_url'])
+
+  const quantityPrices = raw.shopAddition?.quantityPrices
+  const moqFromTier = Array.isArray(quantityPrices) && quantityPrices.length ? parseMoqFromTier(pick(quantityPrices[0], ['quantity'])) : null
+  const moq = pick(raw, ['moq', 'min_order_quantity', 'minOrderQuantity']) || moqFromTier
+
   const unit = pick(raw, ['unit', 'unitName']) || 'pcs'
 
   if (!itemId && !title) return null
@@ -60,9 +116,9 @@ export function normalizeItem(raw) {
     title: title || '(anarana tsy fantatra)',
     image: image || '',
     price: toNumber(rawPrice),
-    priceMax: toNumber(priceMax),
-    sales: toNumber(sales),
-    rating: toNumber(rating),
+    priceMax: null,
+    sales,
+    rating,
     shopName: shopName || '',
     link: link || (itemId ? `https://detail.1688.com/offer/${itemId}.html` : ''),
     moq: toNumber(moq) || 1,
@@ -73,7 +129,7 @@ export function normalizeItem(raw) {
 export function normalizeSearchResponse(raw, keyword, page) {
   const array = findFirstArray(raw) || []
   const items = array.map(normalizeItem).filter(Boolean)
-  const total = pick(raw, ['total', 'totalResults', 'total_results', 'totalCount', 'total_count'])
+  const total = raw?.data?.data?.found ?? pick(raw, ['total', 'totalResults', 'total_results', 'totalCount', 'total_count'])
   return {
     keyword,
     page: Number(page) || 1,
@@ -116,6 +172,16 @@ function normalizeSkus(raw) {
 }
 
 function normalizePriceTiers(raw) {
+  const quantityPrices = raw.shopAddition?.quantityPrices
+  if (Array.isArray(quantityPrices) && quantityPrices.length) {
+    return quantityPrices
+      .map((tier) => ({
+        minQty: parseMoqFromTier(pick(tier, ['quantity'])) || 1,
+        price: toNumber(pick(tier, ['value', 'price']))
+      }))
+      .filter((t) => t.price !== null)
+      .sort((a, b) => a.minQty - b.minQty)
+  }
   const tiers = pick(raw, ['priceRange', 'price_range', 'priceTiers', 'price_tiers', 'wholesale', 'wholesalePrices'])
   if (!Array.isArray(tiers)) return []
   return tiers
@@ -127,12 +193,20 @@ function normalizePriceTiers(raw) {
     .sort((a, b) => a.minQty - b.minQty)
 }
 
-export function normalizeDetailResponse(raw) {
-  const base = normalizeItem(raw)
+export function normalizeDetailResponse(rawEntry) {
+  const inner = rawEntry?.data
+  const raw = inner && typeof inner === 'object' && (inner.offerId || inner.title) ? inner : rawEntry
+
+  const base = normalizeItem(rawEntry)
   if (!base) return null
 
   const imagesRaw = pick(raw, ['images', 'imageList', 'image_list', 'gallery', 'pics'])
-  const images = Array.isArray(imagesRaw) && imagesRaw.length ? imagesRaw.map((i) => (typeof i === 'string' ? i : pick(i, ['url', 'image', 'imgUrl']))).filter(Boolean) : base.image ? [base.image] : []
+  let images = Array.isArray(imagesRaw) && imagesRaw.length ? imagesRaw.map((i) => (typeof i === 'string' ? i : pick(i, ['url', 'image', 'imgUrl']))).filter(Boolean) : []
+  if (!images.length) {
+    const offerPic = pick(raw, ['offerPicUrl', 'pictureUrl'])
+    if (offerPic) images = String(offerPic).split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  if (!images.length && base.image) images = [base.image]
 
   const description = pick(raw, ['description', 'desc', 'detailHtml', 'detail_html', 'content'])
   const video = pick(raw, ['video', 'videoUrl', 'video_url'])
