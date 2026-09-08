@@ -80,6 +80,12 @@ export function searchItems(keyword, page = 1, opts) {
   return callJustOneApi('/search-item-list/v1', { keyword, page }, opts)
 }
 
-export function getItemDetail(itemId) {
-  return callJustOneApi('/get-item-detail/v1', { itemId })
+export function getItemDetail(itemId, opts) {
+  // Detail lookups return far more data (images, SKU trees, description)
+  // than a search row and are noticeably slower upstream - give it more of
+  // the function's time budget than the default, and don't burn time on a
+  // retry (a timeout here isn't a 429, so callJustOneApi wouldn't retry it
+  // anyway; a second full-length attempt would just risk the platform's
+  // own execution limit instead).
+  return callJustOneApi('/get-item-detail/v1', { itemId }, { timeoutMs: 8800, maxRetries: 0, ...opts })
 }

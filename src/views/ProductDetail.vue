@@ -71,7 +71,10 @@ onMounted(load)
 <template>
   <div class="max-w-7xl mx-auto pb-24 tv:pb-8">
     <div v-if="loading" class="p-6 text-center text-gray-400">Eo am-panangonana ny antsipiriany...</div>
-    <div v-else-if="error" class="p-6 text-center text-gray-500">{{ error }}</div>
+    <div v-else-if="error" class="p-6 text-center text-gray-500">
+      <p>{{ error }}</p>
+      <button class="btn-brand mt-4" @click="load">Andramo indray</button>
+    </div>
 
     <div v-else-if="product" class="lg:grid lg:grid-cols-2 lg:gap-6 lg:p-6 tv:grid-cols-2">
       <div>
