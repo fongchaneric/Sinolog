@@ -27,16 +27,19 @@ watch(
 )
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
-const isAuthRoute = computed(() => ['login', 'register'].includes(route.name))
-const showChrome = computed(() => !isAdminRoute.value)
+// The product page has its own overlaid back/cart/share bar and bottom
+// action bar (see ProductDetail.vue), so the default header/bottom nav
+// would just duplicate/clash with those.
+const hasOwnChrome = computed(() => ['login', 'register', 'product'].includes(route.name))
+const showChrome = computed(() => !isAdminRoute.value && !hasOwnChrome.value)
 </script>
 
 <template>
   <div class="min-h-screen bg-surface text-gray-900 font-sans flex flex-col">
-    <AppHeader v-if="showChrome && !isAuthRoute" />
-    <main class="flex-1 w-full" :class="showChrome && !isAuthRoute ? 'pb-16 tv:pb-0' : ''">
+    <AppHeader v-if="showChrome" />
+    <main class="flex-1 w-full" :class="showChrome ? 'pb-16 tv:pb-0' : ''">
       <router-view />
     </main>
-    <BottomNav v-if="showChrome && !isAuthRoute" />
+    <BottomNav v-if="showChrome" />
   </div>
 </template>
