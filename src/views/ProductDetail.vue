@@ -124,24 +124,18 @@ onMounted(load)
   <div class="max-w-7xl mx-auto pb-24 tv:pb-8">
     <div class="fixed top-0 inset-x-0 z-30 flex items-center justify-between px-3 py-2.5 max-w-7xl mx-auto">
       <button @click="goBack" class="w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <svg class="w-5 h-5" viewBox="0 0 1024 1024"><use xlink:href="#iconzuojiantou" /></svg>
       </button>
       <div class="flex items-center gap-2">
         <router-link :to="{ name: 'cart' }" class="relative w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
+          <svg class="w-5 h-5" viewBox="0 0 1024 1024"><use xlink:href="#iconcart" /></svg>
           <span
             v-if="cartCount > 0"
             class="absolute -top-1 -right-1 bg-brand text-white text-[10px] leading-none rounded-full min-w-[16px] h-4 flex items-center justify-center px-1"
           >{{ cartCount > 99 ? '99+' : cartCount }}</span>
         </router-link>
         <button @click="share" class="w-9 h-9 rounded-full bg-black/45 text-white flex items-center justify-center">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342a3 3 0 100-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 8.684a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-          </svg>
+          <svg class="w-5 h-5" viewBox="0 0 1080 1024"><use xlink:href="#iconfenxiang" /></svg>
         </button>
       </div>
     </div>
@@ -241,15 +235,11 @@ onMounted(load)
 
     <div v-if="product" class="fixed bottom-0 inset-x-0 z-20 bg-white border-t border-gray-200 px-2 py-2 flex items-center gap-1.5 max-w-7xl mx-auto lg:rounded-t-xl">
       <button class="flex flex-col items-center justify-center w-14 shrink-0 gap-0.5 text-gray-500">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
+        <svg class="w-5 h-5" viewBox="0 0 1024 1024"><use xlink:href="#iconkefu" /></svg>
         <span class="text-[10px]">Chat</span>
       </button>
       <button @click="toggleFavorite" class="flex flex-col items-center justify-center w-14 shrink-0 gap-0.5" :class="isFavorite ? 'text-red-500' : 'text-gray-500'">
-        <svg class="w-5 h-5" :class="isFavorite ? 'fill-red-500' : 'fill-none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.727l-1.343-1.222C5.4 14.727 2 11.65 2 7.9 2 4.822 4.42 2.4 7.5 2.4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0116.5 2.4C19.58 2.4 22 4.822 22 7.9c0 3.75-3.4 6.827-8.657 11.627L12 20.727z" />
-        </svg>
+        <svg class="w-5 h-5" viewBox="0 0 1068 1024"><use xlink:href="#iconsoucangjia" /></svg>
         <span class="text-[10px]">Save</span>
       </button>
       <button class="flex-1 !py-2.5 text-sm rounded-full font-semibold text-white bg-brand-light active:scale-[0.98] transition" @click="openSheet('cart')">Add card</button>
