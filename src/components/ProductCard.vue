@@ -51,8 +51,9 @@ const priceUsd = computed(() => (props.product.price === null ? '0.00' : (props.
   border-radius: 6px;
   margin-bottom: 12px;
   border: 1px solid #eee;
-  padding: 0 6px 8px;
+  padding: 0 0 8px;
   position: relative;
+  overflow: hidden;
 }
 .fulfill-product-item-vedio {
   width: 34px;
@@ -67,12 +68,10 @@ const priceUsd = computed(() => (props.product.price === null ? '0.00' : (props.
   justify-content: center;
 }
 .fulfill-product-item-img {
+  display: block;
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 6px 6px 0 0;
-  margin: 0 -6px;
-  width: calc(100% + 12px);
 }
 .fulfill-product-item-title {
   font-weight: 400;
@@ -83,11 +82,11 @@ const priceUsd = computed(() => (props.product.price === null ? '0.00' : (props.
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-top: 8px;
-  padding-bottom: 4px;
+  padding: 8px 6px 4px;
 }
 .product-tag {
   margin-top: 3px;
+  padding: 0 6px;
   font-size: 0;
 }
 .fulfill-product-tag {
@@ -98,6 +97,7 @@ const priceUsd = computed(() => (props.product.price === null ? '0.00' : (props.
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  padding: 0 6px;
 }
 .fulfill-product-item-info-price-wrap {
   display: flex;

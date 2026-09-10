@@ -34,9 +34,8 @@ function onImagePicked(e) {
 <template>
   <header class="sticky top-0 z-30 bg-white">
     <div class="max-w-7xl mx-auto flex items-center px-2 py-2">
-      <router-link to="/" class="shrink-0 flex items-center gap-1.5 pl-1">
-        <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-brand text-lg">S</div>
-        <span class="hidden sm:block text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
+      <router-link to="/" class="shrink-0 flex items-center pl-1">
+        <span class="text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
       </router-link>
 
       <!-- header-center / search-box / search-icon / btn-search / camera-icon:
