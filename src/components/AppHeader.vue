@@ -32,32 +32,33 @@ function onImagePicked(e) {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 py-1.5 flex items-center gap-3">
-      <router-link to="/" class="shrink-0 flex items-center gap-1.5">
-        <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-brand text-lg">S</div>
+  <header class="sticky top-0 z-30 bg-white">
+    <div class="max-w-7xl mx-auto flex items-center px-2 py-2">
+      <router-link to="/" class="shrink-0 flex items-center gap-1.5 pl-1">
+        <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-brand text-lg">S</div>
         <span class="hidden sm:block text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
       </router-link>
 
-      <form @submit.prevent="submitSearch" class="flex-1 flex items-center bg-gray-100 rounded-full overflow-hidden pl-3.5 pr-1 py-1 gap-1">
-        <input
-          v-model="keyword"
-          type="search"
-          placeholder="Search for the product you want..."
-          class="flex-1 min-w-0 text-sm outline-none bg-transparent"
-        />
-        <button type="button" @click="openImagePicker" class="text-gray-400 p-1 shrink-0" aria-label="Search by photo">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 17a4 4 0 100-8 4 4 0 000 8z" />
-          </svg>
+      <!-- header-center / search-box / search-icon / btn-search / camera-icon:
+           class names and layout ported from CJ Dropshipping's own header
+           (no separate round search-submit button there either). The
+           search-icon and camera-icon glyphs are CJ private CDN raster
+           images in the reference, so the closest real icons from CJ's own
+           inline sprite (iconsousuo / iconxiangjimianxing) stand in for them. -->
+      <form @submit.prevent="submitSearch" class="header-center display-flex align-items-center flex-1">
+        <div class="search-box relative">
+          <span class="search-icon"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconsousuo" /></svg></span>
+          <input
+            v-model="keyword"
+            type="search"
+            placeholder="Find the product you're looking for"
+            class="btn-search"
+          />
+        </div>
+        <button type="button" @click="openImagePicker" class="camera-icon" aria-label="Search by photo">
+          <svg viewBox="0 0 1024 1024"><use xlink:href="#iconxiangjimianxing" /></svg>
         </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
-        <button type="submit" class="btn-brand !p-2 shrink-0" aria-label="Search">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
-          </svg>
-        </button>
       </form>
     </div>
 
@@ -66,3 +67,64 @@ function onImagePicked(e) {
     </div>
   </header>
 </template>
+
+<style scoped>
+/* Ported 1:1 from the reference file's .header-center/.search-box/
+   .search-icon/.btn-search/.camera-icon rules (rem -> px at 37.5px/rem,
+   the same ratio confirmed against the product-card video badge). */
+.display-flex {
+  display: flex;
+}
+.align-items-center {
+  align-items: center;
+}
+.header-center {
+  margin: 0 12px;
+  position: relative;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: 32px;
+  padding: 0 0 0 30px;
+  border-radius: 150px;
+  background: #f6f6f6;
+  margin: 0 6px 0 4px;
+}
+.search-icon {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  color: #999;
+}
+.search-icon svg,
+.camera-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.btn-search {
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  line-height: 20px;
+  font-size: 12px;
+  color: #666;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+.btn-search::placeholder {
+  color: #999;
+}
+.camera-icon {
+  width: 20px;
+  height: 20px;
+  color: #666;
+  flex-shrink: 0;
+}
+</style>

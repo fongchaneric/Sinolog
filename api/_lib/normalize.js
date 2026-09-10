@@ -74,7 +74,8 @@ export function normalizeItem(entry) {
     shopName,
     link: link || '',
     moq: toNumber(pick(entry, ['moq', 'minOrderQty'])) || 1,
-    unit
+    unit,
+    hasVideo: Boolean(pick(entry, ['productVideo', 'video', 'videoUrl']))
   }
 }
 

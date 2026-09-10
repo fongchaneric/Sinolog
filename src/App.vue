@@ -6,6 +6,7 @@ import { useCartStore } from './stores/cart'
 import { useFavoritesStore } from './stores/favorites'
 import AppHeader from './components/AppHeader.vue'
 import BottomNav from './components/BottomNav.vue'
+import CjIconSprite from './components/CjIconSprite.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -36,6 +37,7 @@ const showChrome = computed(() => !isAdminRoute.value && !hasOwnChrome.value)
 
 <template>
   <div class="min-h-screen bg-surface text-gray-900 font-sans flex flex-col">
+    <CjIconSprite />
     <AppHeader v-if="showChrome" />
     <main class="flex-1 w-full" :class="showChrome ? 'pb-16 tv:pb-0' : ''">
       <router-view />
