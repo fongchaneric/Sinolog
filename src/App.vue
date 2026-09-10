@@ -28,21 +28,25 @@ watch(
 )
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
-// The product page has its own overlaid back/cart/share bar and bottom
-// action bar (see ProductDetail.vue), and the home page now has its own
-// 1688-style search header + tab bar (see Home.vue), so the default
-// header/bottom nav would just duplicate/clash with those.
-const hasOwnChrome = computed(() => ['login', 'register', 'product', 'home'].includes(route.name))
-const showChrome = computed(() => !isAdminRoute.value && !hasOwnChrome.value)
+// The product page draws its own overlaid back/cart/share bar (see
+// ProductDetail.vue), so the shared header would just duplicate/clash with
+// it - login/register are full-screen forms with no header at all. Home
+// keeps its own fixed tab-bar footer (see Home.vue) but otherwise uses the
+// same shared AppHeader as every other page, so there's one header design
+// site-wide instead of two.
+const hasOwnHeader = computed(() => ['login', 'register', 'product'].includes(route.name))
+const hasOwnFooter = computed(() => ['login', 'register', 'product', 'home'].includes(route.name))
+const showHeader = computed(() => !isAdminRoute.value && !hasOwnHeader.value)
+const showFooter = computed(() => !isAdminRoute.value && !hasOwnFooter.value)
 </script>
 
 <template>
   <div class="min-h-screen bg-surface text-gray-900 font-sans flex flex-col">
     <CjIconSprite />
-    <AppHeader v-if="showChrome" />
-    <main class="flex-1 w-full" :class="showChrome ? 'pb-16 tv:pb-0' : ''">
+    <AppHeader v-if="showHeader" />
+    <main class="flex-1 w-full" :class="showFooter ? 'pb-16 tv:pb-0' : ''">
       <router-view />
     </main>
-    <BottomNav v-if="showChrome" />
+    <BottomNav v-if="showFooter" />
   </div>
 </template>
