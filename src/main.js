@@ -18,6 +18,13 @@ async function bootstrap() {
 
   const authStore = useAuthStore()
   await authStore.init()
+
+  // Wait for the router's first navigation to fully resolve (its own
+  // beforeEach guard included) before painting anything - otherwise
+  // route.name is briefly undefined on first load, which App.vue's
+  // showChrome/hasOwnChrome misreads as "show the shared header", flashing
+  // it for a frame before the real route (e.g. Home's own header) takes over.
+  await router.isReady()
   app.mount('#app')
 }
 
