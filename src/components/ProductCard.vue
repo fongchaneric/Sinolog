@@ -33,7 +33,7 @@ const priceUsd = computed(() => (props.product.price === null ? '0.00' : (props.
       <div class="fulfill-product-item-info-price-wrap">
         <p class="fulfill-product-item-info-price active"><span class="price-min">$</span>{{ priceUsd }}</p>
       </div>
-      <p v-if="product.sales" class="fulfill-product-item-info-listedNum">{{ product.sales }} lists</p>
+      <p class="fulfill-product-item-info-listedNum">{{ product.sales || 0 }} lists</p>
     </div>
   </router-link>
 </template>
