@@ -30,11 +30,12 @@ watch(
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 // The product page draws its own overlaid back/cart/share bar (see
 // ProductDetail.vue), so the shared header would just duplicate/clash with
-// it - login/register are full-screen forms with no header at all. Home
-// keeps its own fixed tab-bar footer (see Home.vue) but otherwise uses the
-// same shared AppHeader as every other page, so there's one header design
-// site-wide instead of two.
-const hasOwnHeader = computed(() => ['login', 'register', 'product'].includes(route.name))
+// it - login/register are full-screen forms with no header at all. Search
+// draws its own full-screen search bar (typing happens there, not in the
+// shared header - see SearchResults.vue). Home keeps its own fixed tab-bar
+// footer (see Home.vue) but otherwise uses the same shared AppHeader as
+// every other page, so there's one header design site-wide instead of two.
+const hasOwnHeader = computed(() => ['login', 'register', 'product', 'search'].includes(route.name))
 const hasOwnFooter = computed(() => ['login', 'register', 'product', 'home'].includes(route.name))
 const showHeader = computed(() => !isAdminRoute.value && !hasOwnHeader.value)
 const showFooter = computed(() => !isAdminRoute.value && !hasOwnFooter.value)
