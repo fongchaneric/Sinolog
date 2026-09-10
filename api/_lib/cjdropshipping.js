@@ -67,12 +67,12 @@ async function callCj(path, params, { timeoutMs = 8000, maxRetries = 1, attempt 
   return json
 }
 
-export function searchItems(keyword, page = 1, opts) {
-  return callCj('/product/list', { productNameEn: keyword, pageNum: page, pageSize: 24 }, opts)
+export function searchItems(keyword, page = 1, opts, pageSize = 24) {
+  return callCj('/product/list', { productNameEn: keyword, pageNum: page, pageSize }, opts)
 }
 
-export function listByCategory(categoryId, page = 1, opts) {
-  return callCj('/product/list', { categoryId, pageNum: page, pageSize: 24 }, opts)
+export function listByCategory(categoryId, page = 1, opts, pageSize = 24) {
+  return callCj('/product/list', { categoryId, pageNum: page, pageSize }, opts)
 }
 
 export function getItemDetail(itemId, opts) {

@@ -128,7 +128,7 @@ onUnmounted(() => {
             <div class="priceArea">
               <span class="current-tag">$</span>
               <span class="current-money">{{ priceUsd(p) }}</span>
-              <span class="sold-out">{{ p.sales || 0 }} Lists</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} Lists</span>
             </div>
           </div>
         </a>
@@ -144,7 +144,7 @@ onUnmounted(() => {
             <div class="priceArea">
               <span class="current-tag">$</span>
               <span class="current-money">{{ priceUsd(p) }}</span>
-              <span class="sold-out">{{ p.sales || 0 }} Lists</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} Lists</span>
             </div>
           </div>
         </a>

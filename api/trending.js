@@ -16,14 +16,29 @@ import { getCachedSearch, setCachedSearch } from './_lib/searchCache.js'
 // keywords, since the buyer picked it specifically to see only that.
 const DEFAULT_KEYWORDS = ['phone case', 'keychain', 'usb cable', 'bluetooth earphone', 'power bank', 'memory card', 'watch', 'sunglasses', 'backpack', 'toy']
 const ITEMS_LIMIT = 24
-const MAX_ATTEMPTS = 5
+const MAX_ATTEMPTS = 8
+// A single /product/list call can return a full page of one keyword on its
+// own, which used to let the very first attempt fill the whole ITEMS_LIMIT
+// batch - the grid would then be one category top to bottom (e.g. all phone
+// cases) instead of the mixed feed CJ's own home page shows. Pulling a
+// small slice per keyword and cycling through several distinct keywords
+// keeps each batch mixed.
+const PER_KEYWORD_PAGE_SIZE = 6
 
 function randomPage() {
   return Math.floor(Math.random() * 3) + 1 // 1-3, so a reload of the same keyword/category surfaces different items
 }
 
-function randomDefaultKeyword() {
-  return DEFAULT_KEYWORDS[Math.floor(Math.random() * DEFAULT_KEYWORDS.length)]
+// A shuffled, non-repeating queue of keywords (the buyer's requested one
+// first, if any) - each trending attempt below moves to the next entry
+// instead of re-rolling a keyword that might already be in this batch.
+function shuffledKeywords(requested) {
+  const pool = [...DEFAULT_KEYWORDS]
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+  return requested ? [requested, ...pool.filter((k) => k !== requested)] : pool
 }
 
 export default async function handler(req, res) {
@@ -38,6 +53,7 @@ export default async function handler(req, res) {
   const seen = new Set()
   let anyFailed = false
   const cacheKey = categoryId ? `category:${categoryId}` : requested || null
+  const keywordQueue = categoryId ? null : shuffledKeywords(requested)
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS && collected.length < ITEMS_LIMIT; attempt++) {
     try {
@@ -47,8 +63,8 @@ export default async function handler(req, res) {
         raw = await listByCategory(categoryId, attempt + 1, { maxRetries: 1, timeoutMs: 8000 })
         normalized = normalizeSearchResponse(raw, categoryId, 1)
       } else {
-        const keyword = attempt === 0 && requested ? requested : randomDefaultKeyword()
-        raw = await searchItems(keyword, randomPage(), { maxRetries: 1, timeoutMs: 8000 })
+        const keyword = keywordQueue[attempt % keywordQueue.length]
+        raw = await searchItems(keyword, randomPage(), { maxRetries: 1, timeoutMs: 8000 }, PER_KEYWORD_PAGE_SIZE)
         normalized = normalizeSearchResponse(raw, keyword, 1)
       }
       for (const item of normalized.items) {
@@ -72,7 +88,13 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
 
   if (collected.length) {
-    res.status(200).json({ items: collected.slice(0, ITEMS_LIMIT) })
+    // Without this, each keyword's own slice still lands as one contiguous
+    // block in the grid (all phone cases, then all keychains, ...) even
+    // though several keywords are represented - shuffling interleaves them
+    // the way a real mixed feed reads. A single category browse stays in
+    // its own fetched order since there's only one category to mix.
+    const ordered = categoryId ? collected : collected.sort(() => Math.random() - 0.5)
+    res.status(200).json({ items: ordered.slice(0, ITEMS_LIMIT) })
     return
   }
 
