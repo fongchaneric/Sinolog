@@ -45,7 +45,7 @@ function onImagePicked(e) {
        reference's black background. -->
   <div class="header-container header-fixed">
     <div class="header-container-left">
-      <router-link to="/" class="header-logo">Sinolog</router-link>
+      <router-link to="/" class="header-logo"><span class="header-logo-sino">Sino</span><span class="header-logo-log">log</span></router-link>
       <div class="headerSearch">
         <div class="searchWrapper">
           <form @submit.prevent="submitSearch" class="searchHeader withSearchButton">
@@ -109,6 +109,8 @@ function onImagePicked(e) {
   align-items: center;
   height: 100%;
   display: flex;
+  flex-shrink: 0;
+  width: 12px;
 }
 .header-logo {
   display: flex;
@@ -118,11 +120,17 @@ function onImagePicked(e) {
   height: 100%;
   margin: 0 8px 0 12px;
   flex-shrink: 0;
-  color: #222;
+  font-family: 'Poppins', -apple-system, sans-serif;
   font-weight: 800;
   font-size: 19px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   white-space: nowrap;
+}
+.header-logo-sino {
+  color: #1a1a1a;
+}
+.header-logo-log {
+  color: #ff6a00;
 }
 .headerSearch {
   flex: 1;
