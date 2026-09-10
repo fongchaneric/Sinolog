@@ -32,99 +32,190 @@ function onImagePicked(e) {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 bg-white">
-    <div class="max-w-7xl mx-auto flex items-center px-2 py-2">
-      <router-link to="/" class="shrink-0 flex items-center pl-1">
-        <span class="text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
-      </router-link>
-
-      <!-- header-center / search-box / search-icon / btn-search / camera-icon:
-           class names and layout ported from CJ Dropshipping's own header
-           (no separate round search-submit button there either). The
-           search-icon and camera-icon glyphs are CJ private CDN raster
-           images in the reference, so the closest real icons from CJ's own
-           inline sprite (iconsousuo / iconxiangjimianxing) stand in for them. -->
-      <form @submit.prevent="submitSearch" class="header-center display-flex align-items-center flex-1">
-        <div class="search-box relative">
-          <span class="search-icon"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconsousuo" /></svg></span>
-          <input
-            v-model="keyword"
-            type="search"
-            enterkeyhint="search"
-            placeholder="Find the product you're looking for"
-            class="btn-search"
-          />
+  <!-- header-container/header-container-left/header-container-right/
+       header-logo/searchHeader/withSearchButton/label/inputWrapper/input/
+       inputActions/cameraButton/searchButton/searchButtonIcon: ported 1:1
+       from the reference capture's own header, fixed position + the
+       height:50px spacer sibling it uses to keep content from sliding
+       underneath. header-logo swaps the reference's own background-image
+       logo for the Sinolog wordmark; the search and camera glyphs are CJ's
+       real sprite icons (iconsousuo/iconxiangjimianxing, see
+       CjIconSprite.vue), not the reference's own inline SVGs; and
+       searchButton keeps the app's own brand color instead of the
+       reference's black background. -->
+  <div class="header-container header-fixed">
+    <div class="header-container-left">
+      <router-link to="/" class="header-logo">Sinolog</router-link>
+      <div class="headerSearch">
+        <div class="searchWrapper">
+          <form @submit.prevent="submitSearch" class="searchHeader withSearchButton">
+            <label class="label">
+              <div class="inputWrapper">
+                <input v-model="keyword" type="text" enterkeyhint="search" placeholder="Find the product you're looking for" class="input" />
+              </div>
+              <div class="inputActions">
+                <button type="button" @click="openImagePicker" class="cameraButton" aria-label="Search by photo">
+                  <svg viewBox="0 0 1024 1024"><use xlink:href="#iconxiangjimianxing" /></svg>
+                </button>
+              </div>
+            </label>
+            <button type="submit" class="searchButton" aria-label="Search">
+              <svg viewBox="0 0 1024 1024" class="searchButtonIcon"><use xlink:href="#iconsousuo" /></svg>
+            </button>
+          </form>
         </div>
-        <button type="button" @click="openImagePicker" class="camera-icon" aria-label="Search by photo">
-          <svg viewBox="0 0 1024 1024"><use xlink:href="#iconxiangjimianxing" /></svg>
-        </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
-      </form>
+      </div>
     </div>
+    <div class="header-container-right"></div>
+  </div>
+  <div class="header-spacer"></div>
 
-    <div v-if="toast" class="fixed top-16 inset-x-0 flex justify-center z-50">
-      <div class="bg-black/80 text-white text-sm px-4 py-2 rounded-full">{{ toast }}</div>
-    </div>
-  </header>
+  <div v-if="toast" class="fixed top-16 inset-x-0 flex justify-center z-50">
+    <div class="bg-black/80 text-white text-sm px-4 py-2 rounded-full">{{ toast }}</div>
+  </div>
 </template>
 
 <style scoped>
-/* Ported 1:1 from the reference file's .header-center/.search-box/
-   .search-icon/.btn-search/.camera-icon rules (rem -> px at 37.5px/rem,
-   the same ratio confirmed against the product-card video badge). */
-.display-flex {
+/* Ported 1:1 from the reference capture's own px-based CSS. */
+.header-fixed {
+  z-index: 999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.header-spacer {
+  height: 50px;
+}
+.header-container {
+  background-color: #fff;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 1px 0;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 50px;
   display: flex;
 }
-.align-items-center {
+.header-container-left {
+  flex: 1;
   align-items: center;
+  height: 100%;
+  display: flex;
+  min-width: 0;
 }
-.header-center {
-  margin: 0 12px;
+.header-container-right {
+  align-items: center;
+  height: 100%;
+  display: flex;
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 125px;
+  height: 100%;
+  margin: 0 13.5px;
+  flex-shrink: 0;
+  color: #222;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+.headerSearch {
+  flex: 1;
+  min-width: 0;
+}
+.searchWrapper {
+  width: 100%;
+}
+.searchHeader {
+  background: #f4f4f4;
+  border-radius: 999px;
+  flex-grow: 1;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  margin: 0 4px 0 0;
+  padding: 0 4px 0 16px;
+  display: flex;
+  box-sizing: border-box;
+}
+.label {
+  flex-grow: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  display: flex;
+}
+.inputWrapper {
+  flex-grow: 1;
+  align-items: center;
+  min-width: 0;
+  height: 22px;
+  display: flex;
   position: relative;
 }
-.search-box {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  height: 32px;
-  padding: 0 0 0 30px;
-  border-radius: 150px;
-  background: #f6f6f6;
-  margin: 0 6px 0 4px;
+.input {
+  caret-color: #f60;
+  color: #222;
+  text-overflow: ellipsis;
+  background: none;
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 16px;
 }
-.search-icon {
-  position: absolute;
-  left: 6px;
-  top: 50%;
+.input::placeholder {
+  color: #b8b8b8;
+}
+.inputActions {
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+.cameraButton {
+  color: #222;
+  cursor: pointer;
+  background: none;
+  border: none;
+  justify-content: center;
+  align-items: center;
   width: 20px;
   height: 20px;
-  transform: translateY(-50%);
-  color: #999;
+  padding: 0;
+  display: flex;
+  flex-shrink: 0;
 }
-.search-icon svg,
-.camera-icon svg {
+.cameraButton svg {
   width: 100%;
   height: 100%;
 }
-.btn-search {
-  flex: 1;
-  min-width: 0;
-  height: 20px;
-  line-height: 20px;
-  font-size: 12px;
-  color: #666;
-  background: transparent;
+.searchButton {
+  cursor: pointer;
   border: none;
-  outline: none;
-  padding: 0;
+  border-radius: 999px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 26px;
+  padding: 0 12px;
+  display: flex;
+  background: #ff6a00;
+  color: #fff;
 }
-.btn-search::placeholder {
-  color: #999;
-}
-.camera-icon {
+.searchButtonIcon {
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
-  color: #666;
-  flex-shrink: 0;
 }
 </style>
