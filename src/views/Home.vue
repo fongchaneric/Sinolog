@@ -1,14 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 import { getTrendingProducts } from '../utils/api'
 import { getRecentSearches } from '../utils/recentSearches'
 import { proxyImage } from '../utils/image'
 import { CNY_TO_USD } from '../utils/currency'
 
 const router = useRouter()
-const authStore = useAuthStore()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -17,8 +15,6 @@ const products = ref([])
 const sentinel = ref(null)
 let observer = null
 let keywordCursor = 0
-
-const loginTo = computed(() => (authStore.isLoggedIn ? { name: 'account' } : { name: 'login' }))
 
 // Two independently-stacked columns (not a CSS grid) - the same manual
 // waterfall split the reference page itself uses, so card heights don't
@@ -61,10 +57,6 @@ async function loadBatch(isInitial) {
   }
 }
 
-function goToSearch() {
-  router.push({ name: 'search' })
-}
-
 // product.price is stored in CNY (see api/_lib/normalize.js); converted
 // back to the USD the card actually displays a "$" prefix for.
 function priceUsd(p) {
@@ -89,22 +81,9 @@ onUnmounted(() => {
 
 <template>
   <div class="home-page">
-    <!-- search-outerWrapper/search-wrapper/search-input/search-text/login-btn:
-         ported from the reference capture's own header (a tap-to-search bar,
-         not an inline input, plus its login button), same vw units as the
-         reference's own CSS so proportions stay identical on any real
-         device width. The search glyph is CJ's real iconsousuo sprite icon
-         (see CjIconSprite.vue), not the reference's own raster CDN image. -->
-    <div class="search-outerWrapper">
-      <div class="search-wrapper">
-        <div class="search-input" @click="goToSearch">
-          <span class="search-img"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconsousuo" /></svg></span>
-          <span class="search-text">Find the product you're looking for</span>
-        </div>
-        <router-link :to="loginTo" class="login-btn">Login</router-link>
-      </div>
-    </div>
-
+    <!-- Home no longer draws its own header - it uses the shared
+         AppHeader.vue (App.vue), which already matches the site's real
+         header reference, so there's exactly one header design site-wide. -->
     <div class="product-list">
       <div class="product-left">
         <a v-for="p in leftColumn" :key="p.itemId" href="#" class="goods-container" @click.prevent="router.push({ name: 'product', params: { itemId: p.itemId } })">
@@ -198,69 +177,6 @@ onUnmounted(() => {
   background-color: #f2f2f2;
   padding-bottom: 25vw;
   overflow-x: hidden;
-}
-
-.search-outerWrapper {
-  width: 100vw;
-  padding: 2.4vw 0;
-  background-color: #fff;
-}
-.search-wrapper {
-  display: flex;
-  width: 95.2vw;
-  margin: 0 auto;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  height: 9.33333vw;
-}
-.search-input {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  border: 0.4vw solid #ff6200;
-  width: 78.4vw;
-  flex: 1;
-  border-radius: 1.6vw;
-  margin: 0 2.4vw 0 0;
-  background-color: #fff;
-  padding: 0 2.1333vw;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-.search-img {
-  width: 4.4vw;
-  height: 4.4vw;
-  box-sizing: border-box;
-  color: #999;
-  flex-shrink: 0;
-}
-.search-img svg {
-  width: 100%;
-  height: 100%;
-}
-.search-text {
-  flex: 1;
-  min-width: 0;
-  height: 9.33333vw;
-  line-height: 9.33333vw;
-  padding-left: 1.6vw;
-  font-size: 3.2vw;
-  color: #999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.login-btn {
-  width: 14.4vw;
-  height: 9.33333vw;
-  flex-shrink: 0;
-  border-radius: 1.6vw;
-  background-color: #ff7044;
-  font-size: 4vw;
-  line-height: 9.33333vw;
-  color: #fff;
-  text-align: center;
 }
 
 .product-list {
