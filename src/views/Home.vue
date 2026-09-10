@@ -1,8 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import ProductCard from '../components/ProductCard.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { getTrendingProducts } from '../utils/api'
 import { getRecentSearches } from '../utils/recentSearches'
+import { proxyImage } from '../utils/image'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -11,6 +16,16 @@ const products = ref([])
 const sentinel = ref(null)
 let observer = null
 let keywordCursor = 0
+
+const loginTo = computed(() => (authStore.isLoggedIn ? { name: 'account' } : { name: 'login' }))
+
+// Two independently-stacked columns (not a CSS grid) - the same manual
+// waterfall split the reference page itself uses, so card heights don't
+// need to line up across columns.
+const leftColumn = computed(() => products.value.filter((_, i) => i % 2 === 0))
+const rightColumn = computed(() => products.value.filter((_, i) => i % 2 === 1))
+
+const fallbackImg = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect width="300" height="300" fill="%23eee"/%3E%3C/svg%3E'
 
 // Leans the trending grid toward the buyer's own last few searches once
 // they have any, but not exclusively - every third batch falls back to
@@ -45,6 +60,10 @@ async function loadBatch(isInitial) {
   }
 }
 
+function goToSearch() {
+  router.push({ name: 'search' })
+}
+
 onMounted(() => {
   loadBatch(true)
   observer = new IntersectionObserver(
@@ -62,147 +81,309 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto">
-    <!-- delay-tip-wrap/delay-tip-container: CJ's own scrolling promo-strip
-         markup and styling, carrying Sinolog's own message instead of
-         their conference ad (the only thing in the reference that isn't
-         literally reusable as-is, since it's CJ-brand-specific copy). -->
-    <div class="delay-tip-wrap">
-      <div class="delay-tip-container">
-        <span class="delay-tip-icon">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff"><path d="M12 22a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0012 22zm7-6v-5a7 7 0 10-14 0v5l-1.6 1.6a1 1 0 00.7 1.7h15.8a1 1 0 00.7-1.7L19 16z" /></svg>
-        </span>
-        <div class="delay-tip-container-content">
-          <p class="delay-tip-container-words">We buy and ship for you from China - pay safely by Mobile Money</p>
-          <p class="delay-tip-container-words">We buy and ship for you from China - pay safely by Mobile Money</p>
+  <div class="home-page">
+    <!-- search-outerWrapper/search-wrapper/search-input/search-text/login-btn:
+         ported from the reference capture's own header (a tap-to-search bar,
+         not an inline input, plus its login button) - vw values converted to
+         px at a 375px mobile design width, the whole page then capped to
+         480px and centered for wider screens. The search glyph is CJ's real
+         iconsousuo sprite icon (see CjIconSprite.vue), not the reference's
+         own raster CDN image. -->
+    <div class="search-outerWrapper">
+      <div class="search-wrapper">
+        <div class="search-input" @click="goToSearch">
+          <span class="search-img"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconsousuo" /></svg></span>
+          <span class="search-text">Find the product you're looking for</span>
         </div>
-        <div class="delay-forward-icon-mask"></div>
-        <span class="delay-forward-icon"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconyoujiantou" /></svg></span>
+        <router-link :to="loginTo" class="login-btn">Login</router-link>
       </div>
     </div>
 
-    <section class="fulfill-product-wrap">
-      <div class="fulfill-product-content">
-        <div v-if="loading" class="fulfill-product-list-wrap">
-          <div v-for="i in 8" :key="i" class="fulfill-product-item animate-pulse">
-            <div class="fulfill-product-item-img bg-gray-100" />
+    <div class="product-list">
+      <div class="product-left">
+        <a v-for="p in leftColumn" :key="p.itemId" href="#" class="goods-container" @click.prevent="router.push({ name: 'product', params: { itemId: p.itemId } })">
+          <div class="tuipin-main-img-box">
+            <img class="tuipin-main-img" loading="lazy" :src="proxyImage(p.image) || fallbackImg" :alt="p.title" @error="$event.target.src = fallbackImg" />
+            <div class="tuipin-offerImage-mask"></div>
           </div>
-        </div>
-
-        <div v-else-if="error" class="text-center text-sm text-gray-500 py-10">
-          <p>{{ error }}</p>
-          <p class="text-xs mt-1 text-gray-400">Check that CJ_API_KEY, CJ_API_EMAIL and CJ_API_BASE_URL are configured on Vercel.</p>
-        </div>
-
-        <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">—</div>
-
-        <div v-else class="fulfill-product-list-wrap">
-          <ProductCard v-for="p in products" :key="p.itemId" :product="p" />
-        </div>
-
-        <div ref="sentinel" class="h-1" />
-        <div v-if="loadingMore" class="flex flex-col items-center py-3 gap-1.5 text-gray-400 text-sm">
-          <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
-          <span>Loading...</span>
-        </div>
+          <div class="goods-content">
+            <span class="goods-title">{{ p.title }}</span>
+            <div class="priceArea">
+              <span class="current-tag">¥</span>
+              <span class="current-money">{{ p.price === null ? '0.00' : p.price.toFixed(2) }}</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} sold</span>
+            </div>
+          </div>
+        </a>
       </div>
-    </section>
+      <div class="product-right">
+        <a v-for="p in rightColumn" :key="p.itemId" href="#" class="goods-container" @click.prevent="router.push({ name: 'product', params: { itemId: p.itemId } })">
+          <div class="tuipin-main-img-box">
+            <img class="tuipin-main-img" loading="lazy" :src="proxyImage(p.image) || fallbackImg" :alt="p.title" @error="$event.target.src = fallbackImg" />
+            <div class="tuipin-offerImage-mask"></div>
+          </div>
+          <div class="goods-content">
+            <span class="goods-title">{{ p.title }}</span>
+            <div class="priceArea">
+              <span class="current-tag">¥</span>
+              <span class="current-money">{{ p.price === null ? '0.00' : p.price.toFixed(2) }}</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} sold</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div v-if="loading" class="skeleton-list">
+      <div v-for="i in 6" :key="i" class="skeleton-card animate-pulse" />
+    </div>
+
+    <div v-else-if="error" class="text-center text-sm text-gray-500 py-10 px-4">
+      <p>{{ error }}</p>
+      <p class="text-xs mt-1 text-gray-400">Check that CJ_API_KEY, CJ_API_EMAIL and CJ_API_BASE_URL are configured on Vercel.</p>
+    </div>
+
+    <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">—</div>
+
+    <div ref="sentinel" class="h-1" />
+    <div v-if="loadingMore" class="flex flex-col items-center py-3 text-gray-400">
+      <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
+    </div>
+
+    <!-- footerBar/footerBarCon/tab-item/tab-img/tab-text/active-image:
+         ported from the reference's own fixed tab bar, using CJ's real
+         sprite icons (iconhome/iconMessage/iconcart/iconAccount) instead
+         of its raster CDN images. -->
+    <div class="footerBar">
+      <div class="footerBarCon">
+        <router-link :to="{ name: 'home' }" class="tab-item">
+          <svg class="active-image" viewBox="0 0 1024 1024"><use xlink:href="#iconhome" /></svg>
+          <span class="tab-text">Home</span>
+        </router-link>
+        <router-link :to="{ name: 'orders' }" class="tab-item">
+          <svg class="tab-img" viewBox="0 0 1024 1024"><use xlink:href="#iconMessage" /></svg>
+          <span class="tab-text">Message</span>
+        </router-link>
+        <router-link :to="{ name: 'cart' }" class="tab-item">
+          <svg class="tab-img" viewBox="0 0 1024 1024"><use xlink:href="#iconcart" /></svg>
+          <span class="tab-text">Cart</span>
+        </router-link>
+        <router-link :to="{ name: 'account' }" class="tab-item">
+          <svg class="tab-img" viewBox="0 0 1024 1024"><use xlink:href="#iconAccount" /></svg>
+          <span class="tab-text">Me</span>
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Ported 1:1 from the reference file's own promo-strip and product-grid
-   wrapper CSS (rem -> px at 37.5px/rem). */
-.delay-tip-wrap {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 8px 0;
-}
-.delay-tip-container {
-  width: 100%;
-  max-width: 346px;
-  position: relative;
-  height: 32px;
-  background-color: #fb544c;
-  border-radius: 16px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.delay-tip-icon {
-  margin: 0 4px 0 12px;
-  display: flex;
-  flex-shrink: 0;
-}
-.delay-tip-container-content {
-  white-space: nowrap;
-  overflow: hidden;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 400;
-  width: 100%;
-  min-width: 0;
-}
-.delay-tip-container-words {
-  position: relative;
-  display: inline-block;
-  animation: cj-marquee 14s linear infinite;
-  padding-left: 40px;
-}
-@keyframes cj-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
-}
-.delay-forward-icon-mask {
-  position: absolute;
-  right: 17px;
-  width: 15px;
-  height: 30px;
-  background: linear-gradient(to right, rgba(251, 84, 76, 0), rgba(251, 84, 76, 0.9));
-}
-.delay-forward-icon {
-  font-size: 16px;
-  color: #fff;
-  margin-right: 6px;
-  z-index: 1;
-  display: flex;
-}
-.delay-forward-icon svg {
-  width: 16px;
-  height: 16px;
+/* Ported 1:1 from the reference capture's own CSS (vw values converted to
+   px at a 375px mobile design width - the file's own component stylesheet,
+   not its generic box-reset block, wins wherever the two conflicted, e.g.
+   footerBar's !important height/position). The whole page is capped at a
+   480px centered column so it doesn't stretch edge-to-edge on wide screens. */
+.home-page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #f2f2f2;
+  padding-bottom: 95px;
 }
 
-.fulfill-product-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 12px;
+.search-outerWrapper {
+  width: 100%;
+  padding: 9px 0;
   background-color: #fff;
 }
-.fulfill-product-content {
-  margin: 0 12px;
+.search-wrapper {
+  display: flex;
+  width: 95.2%;
+  margin: 0 auto;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 35px;
+}
+.search-input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1.5px solid #ff6200;
+  width: 294px;
+  flex: 1;
+  border-radius: 6px;
+  margin: 0 9px 0 0;
+  background-color: #fff;
+  padding: 0 8px;
+  cursor: pointer;
+}
+.search-img {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  color: #999;
+  flex-shrink: 0;
+}
+.search-img svg {
   width: 100%;
+  height: 100%;
 }
-.fulfill-product-list-wrap {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0 8px;
+.search-text {
+  flex: 1;
+  min-width: 0;
+  height: 35px;
+  line-height: 35px;
+  padding-left: 6px;
+  font-size: 12px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-@media (min-width: 640px) {
-  .fulfill-product-list-wrap {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.login-btn {
+  width: 54px;
+  height: 35px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background-color: #ff7044;
+  font-size: 15px;
+  line-height: 35px;
+  color: #fff;
+  text-align: center;
 }
-@media (min-width: 1024px) {
-  .fulfill-product-list-wrap {
-    grid-template-columns: repeat(4, 1fr);
-  }
+
+.product-list {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 9px 0;
+}
+.product-left,
+.product-right {
+  display: flex;
+  flex-direction: column;
+  width: 46.4%;
+}
+.goods-container {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  margin-bottom: 9px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.tuipin-main-img-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.tuipin-main-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tuipin-offerImage-mask {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.goods-content {
+  padding: 9px;
+  position: relative;
+}
+.goods-title {
+  display: block;
+  font-size: 14px;
+  white-space: nowrap;
+  line-height: 16px;
+  color: #222;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.priceArea {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+.current-tag {
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 500;
+  color: rgb(255, 41, 0);
+}
+.current-money {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgb(255, 41, 0);
+  height: 16px;
+  line-height: 16px;
+}
+.sold-out {
+  font-size: 12px;
+  color: rgb(136, 136, 136);
+  margin-left: 6px;
+}
+
+.skeleton-list {
+  display: flex;
+  gap: 9px;
+  padding: 0 9px;
+}
+.skeleton-card {
+  flex: 1;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+  background: #e5e5e5;
+}
+
+.footerBar {
+  height: 83px !important;
+  position: fixed !important;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  background-color: #fff;
+  z-index: 30;
+}
+.footerBarCon {
+  width: 100%;
+  height: 100%;
+  padding: 0 41px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.tab-item {
+  height: 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 7px;
+  color: #222;
+}
+.tab-img {
+  width: 20px;
+  height: 20px;
+  color: #999;
+}
+.tab-text {
+  font-size: 11px !important;
+  margin-top: 7.5px;
+  line-height: 11px;
+  color: #222;
+}
+.active-image {
+  width: 37px;
+  height: 37px;
+  color: #ff6a00;
 }
 </style>

@@ -29,9 +29,10 @@ watch(
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 // The product page has its own overlaid back/cart/share bar and bottom
-// action bar (see ProductDetail.vue), so the default header/bottom nav
-// would just duplicate/clash with those.
-const hasOwnChrome = computed(() => ['login', 'register', 'product'].includes(route.name))
+// action bar (see ProductDetail.vue), and the home page now has its own
+// 1688-style search header + tab bar (see Home.vue), so the default
+// header/bottom nav would just duplicate/clash with those.
+const hasOwnChrome = computed(() => ['login', 'register', 'product', 'home'].includes(route.name))
 const showChrome = computed(() => !isAdminRoute.value && !hasOwnChrome.value)
 </script>
 
