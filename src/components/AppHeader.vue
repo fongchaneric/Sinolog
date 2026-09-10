@@ -34,16 +34,14 @@ function onImagePicked(e) {
 <template>
   <header class="sticky top-0 z-30 bg-white">
     <div class="max-w-7xl mx-auto flex items-center px-2 py-2">
-      <router-link to="/" class="shrink-0 flex items-center pl-1">
-        <span class="text-gray-800 font-bold text-lg tracking-tight">Sinolog</span>
-      </router-link>
-
-      <!-- header-center / search-box / search-icon / btn-search / camera-icon:
-           class names and layout ported from CJ Dropshipping's own header
-           (no separate round search-submit button there either). The
-           search-icon and camera-icon glyphs are CJ private CDN raster
-           images in the reference, so the closest real icons from CJ's own
-           inline sprite (iconsousuo / iconxiangjimianxing) stand in for them. -->
+      <!-- header-center / search-box / search-icon / btn-search / camera-icon /
+           btn-more-icon: class names and layout ported from CJ Dropshipping's
+           own header - no logo there and no separate round search-submit
+           button either. The search-icon and camera-icon glyphs are CJ
+           private CDN raster images in the reference, so the closest real
+           icons from CJ's own inline sprite (iconsousuo / iconxiangjimianxing)
+           stand in for them; the "..." button reuses their real icongengduo1
+           (three-dot) sprite icon as-is. -->
       <form @submit.prevent="submitSearch" class="header-center display-flex align-items-center flex-1">
         <div class="search-box relative">
           <span class="search-icon"><svg viewBox="0 0 1024 1024"><use xlink:href="#iconsousuo" /></svg></span>
@@ -59,6 +57,9 @@ function onImagePicked(e) {
         </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
       </form>
+      <button type="button" class="btn-more-icon" aria-label="More">
+        <svg viewBox="0 0 1024 1024"><use xlink:href="#icongengduo1" /></svg>
+      </button>
     </div>
 
     <div v-if="toast" class="fixed top-16 inset-x-0 flex justify-center z-50">
@@ -125,5 +126,17 @@ function onImagePicked(e) {
   height: 20px;
   color: #666;
   flex-shrink: 0;
+}
+.btn-more-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  color: #333;
+  flex-shrink: 0;
+}
+.btn-more-icon svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(90deg);
 }
 </style>
