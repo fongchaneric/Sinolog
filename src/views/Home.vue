@@ -84,7 +84,39 @@ onUnmounted(() => {
     <!-- Home no longer draws its own header - it uses the shared
          AppHeader.vue (App.vue), which already matches the site's real
          header reference, so there's exactly one header design site-wide. -->
-    <div class="product-list">
+    <!-- Skeleton is the same product-list/goods-container structure and
+         sizing as the real grid below (not a generic placeholder row), so
+         the layout never jumps from a small loading shape to bigger real
+         cards once data arrives. -->
+    <div v-if="loading" class="product-list">
+      <div class="product-left">
+        <div v-for="i in 3" :key="i" class="goods-container skeleton-goods">
+          <div class="tuipin-main-img-box animate-pulse"></div>
+          <div class="goods-content">
+            <div class="skeleton-line skeleton-line-title animate-pulse"></div>
+            <div class="skeleton-line skeleton-line-price animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+      <div class="product-right">
+        <div v-for="i in 3" :key="i" class="goods-container skeleton-goods">
+          <div class="tuipin-main-img-box animate-pulse"></div>
+          <div class="goods-content">
+            <div class="skeleton-line skeleton-line-title animate-pulse"></div>
+            <div class="skeleton-line skeleton-line-price animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="error" class="text-center text-sm text-gray-500 py-10 px-4">
+      <p>{{ error }}</p>
+      <p class="text-xs mt-1 text-gray-400">Check that CJ_API_KEY, CJ_API_EMAIL and CJ_API_BASE_URL are configured on Vercel.</p>
+    </div>
+
+    <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">—</div>
+
+    <div v-else class="product-list">
       <div class="product-left">
         <a v-for="p in leftColumn" :key="p.itemId" href="#" class="goods-container" @click.prevent="router.push({ name: 'product', params: { itemId: p.itemId } })">
           <div class="tuipin-main-img-box">
@@ -119,20 +151,29 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div v-if="loading" class="skeleton-list">
-      <div v-for="i in 6" :key="i" class="skeleton-card animate-pulse" />
-    </div>
-
-    <div v-else-if="error" class="text-center text-sm text-gray-500 py-10 px-4">
-      <p>{{ error }}</p>
-      <p class="text-xs mt-1 text-gray-400">Check that CJ_API_KEY, CJ_API_EMAIL and CJ_API_BASE_URL are configured on Vercel.</p>
-    </div>
-
-    <div v-else-if="!products.length" class="text-center text-sm text-gray-400 py-10">—</div>
-
     <div ref="sentinel" class="h-1" />
-    <div v-if="loadingMore" class="flex flex-col items-center py-3 text-gray-400">
-      <div class="w-6 h-6 border-2 border-gray-200 border-t-brand rounded-full animate-spin" />
+    <!-- Full card-shaped placeholders (not just a small spinner) so a fast
+         fling never outruns the fetch into visibly blank background - the
+         next batch's shape is already there, just empty, while it loads. -->
+    <div v-if="loadingMore" class="product-list">
+      <div class="product-left">
+        <div v-for="i in 2" :key="i" class="goods-container skeleton-goods">
+          <div class="tuipin-main-img-box animate-pulse"></div>
+          <div class="goods-content">
+            <div class="skeleton-line skeleton-line-title animate-pulse"></div>
+            <div class="skeleton-line skeleton-line-price animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+      <div class="product-right">
+        <div v-for="i in 2" :key="i" class="goods-container skeleton-goods">
+          <div class="tuipin-main-img-box animate-pulse"></div>
+          <div class="goods-content">
+            <div class="skeleton-line skeleton-line-title animate-pulse"></div>
+            <div class="skeleton-line skeleton-line-price animate-pulse"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- footerBar/footerBarCon/tab-item/tab-img/tab-text/active-image:
@@ -175,7 +216,7 @@ onUnmounted(() => {
   width: 100vw;
   min-height: 100vh;
   background-color: #f2f2f2;
-  padding-bottom: 25vw;
+  padding-bottom: 17vw;
   overflow-x: hidden;
 }
 
@@ -207,6 +248,7 @@ onUnmounted(() => {
   position: relative;
   width: 46.4vw;
   height: 46.4vw;
+  background-color: #eee;
 }
 .tuipin-main-img {
   display: block;
@@ -262,20 +304,28 @@ onUnmounted(() => {
   margin-left: 1.6vw;
 }
 
-.skeleton-list {
-  display: flex;
-  gap: 2.4vw;
-  padding: 0 2.4vw;
+.skeleton-goods {
+  pointer-events: none;
 }
-.skeleton-card {
-  flex: 1;
-  aspect-ratio: 3 / 4;
-  border-radius: 1.6vw;
-  background: #e5e5e5;
+.skeleton-goods .tuipin-main-img-box {
+  background-color: #e5e5e5;
+}
+.skeleton-line {
+  border-radius: 1vw;
+  background-color: #e5e5e5;
+}
+.skeleton-line-title {
+  width: 80%;
+  height: 3.7333vw;
+}
+.skeleton-line-price {
+  width: 40%;
+  height: 4.2667vw;
+  margin-top: 2.6667vw;
 }
 
 .footerBar {
-  height: 22.13333vw !important;
+  height: 15vw !important;
   position: fixed !important;
   left: 0;
   bottom: 0;
@@ -304,8 +354,8 @@ onUnmounted(() => {
   color: #222;
 }
 .tab-img {
-  width: 5.33333vw;
-  height: 5.33333vw;
+  width: 6.4vw;
+  height: 6.4vw;
   color: #999;
 }
 .tab-text {
@@ -315,8 +365,8 @@ onUnmounted(() => {
   color: #222;
 }
 .active-image {
-  width: 9.86667vw;
-  height: 9.86667vw;
+  width: 11.2vw;
+  height: 11.2vw;
   color: #ff6a00;
 }
 </style>
