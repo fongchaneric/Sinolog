@@ -114,14 +114,15 @@ function onImagePicked(e) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 125px;
+  width: auto;
   height: 100%;
-  margin: 0 13.5px;
+  margin: 0 8px 0 12px;
   flex-shrink: 0;
   color: #222;
   font-weight: 800;
   font-size: 19px;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 .headerSearch {
   flex: 1;
