@@ -1,19 +1,18 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { addRecentSearch } from '../utils/recentSearches'
 
 const router = useRouter()
 const route = useRoute()
-const keyword = ref(route.query.q || '')
 const fileInput = ref(null)
 const toast = ref('')
 
-function submitSearch() {
-  const q = keyword.value.trim()
-  if (!q) return
-  addRecentSearch(q)
-  router.push({ name: 'search', query: { q } })
+// Tapping the search bar goes to the dedicated full-screen search page
+// (SearchResults.vue) instead of opening the keyboard right here - matches
+// how the reference site's own compact header behaves (typing happens on
+// its own search screen, not inline in the header).
+function goToSearch() {
+  router.push({ name: 'search' })
 }
 
 function openImagePicker() {
@@ -48,21 +47,21 @@ function onImagePicked(e) {
       <router-link to="/" class="header-logo"><span class="header-logo-sino">Sino</span><span class="header-logo-log">log</span></router-link>
       <div class="headerSearch">
         <div class="searchWrapper">
-          <form @submit.prevent="submitSearch" class="searchHeader withSearchButton">
-            <label class="label">
+          <div class="searchHeader withSearchButton" @click="goToSearch">
+            <div class="label">
               <div class="inputWrapper">
-                <input v-model="keyword" type="text" enterkeyhint="search" placeholder="Find the product you're looking for" class="input" />
+                <span class="input" :class="{ 'input-placeholder': !route.query.q }">{{ route.query.q || "Find the product you're looking for" }}</span>
               </div>
               <div class="inputActions">
-                <button type="button" @click="openImagePicker" class="cameraButton" aria-label="Search by photo">
+                <button type="button" @click.stop="openImagePicker" class="cameraButton" aria-label="Search by photo">
                   <svg viewBox="0 0 1024 1024"><use xlink:href="#iconxiangjimianxing" /></svg>
                 </button>
               </div>
-            </label>
-            <button type="submit" class="searchButton" aria-label="Search">
+            </div>
+            <button type="button" class="searchButton" aria-label="Search" @click.stop="goToSearch">
               <svg viewBox="0 0 1024 1024" class="searchButtonIcon"><use xlink:href="#iconsousuo" /></svg>
             </button>
-          </form>
+          </div>
         </div>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onImagePicked" />
       </div>
@@ -151,6 +150,7 @@ function onImagePicked(e) {
   padding: 0 4px 0 16px;
   display: flex;
   box-sizing: border-box;
+  cursor: pointer;
 }
 .label {
   flex-grow: 1;
@@ -168,12 +168,10 @@ function onImagePicked(e) {
   position: relative;
 }
 .input {
-  caret-color: #f60;
   color: #222;
   text-overflow: ellipsis;
-  background: none;
-  border: none;
-  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
   flex-grow: 1;
   width: 100%;
   min-width: 0;
@@ -182,7 +180,7 @@ function onImagePicked(e) {
   font-size: 16px;
   line-height: 16px;
 }
-.input::placeholder {
+.input-placeholder {
   color: #b8b8b8;
 }
 .inputActions {
