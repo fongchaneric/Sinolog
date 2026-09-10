@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth'
 import { getTrendingProducts } from '../utils/api'
 import { getRecentSearches } from '../utils/recentSearches'
 import { proxyImage } from '../utils/image'
+import { CNY_TO_USD } from '../utils/currency'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -64,6 +65,12 @@ function goToSearch() {
   router.push({ name: 'search' })
 }
 
+// product.price is stored in CNY (see api/_lib/normalize.js); converted
+// back to the USD the card actually displays a "$" prefix for.
+function priceUsd(p) {
+  return p.price === null ? '0.00' : (p.price * CNY_TO_USD).toFixed(2)
+}
+
 onMounted(() => {
   loadBatch(true)
   observer = new IntersectionObserver(
@@ -84,11 +91,10 @@ onUnmounted(() => {
   <div class="home-page">
     <!-- search-outerWrapper/search-wrapper/search-input/search-text/login-btn:
          ported from the reference capture's own header (a tap-to-search bar,
-         not an inline input, plus its login button) - vw values converted to
-         px at a 375px mobile design width, the whole page then capped to
-         480px and centered for wider screens. The search glyph is CJ's real
-         iconsousuo sprite icon (see CjIconSprite.vue), not the reference's
-         own raster CDN image. -->
+         not an inline input, plus its login button), same vw units as the
+         reference's own CSS so proportions stay identical on any real
+         device width. The search glyph is CJ's real iconsousuo sprite icon
+         (see CjIconSprite.vue), not the reference's own raster CDN image. -->
     <div class="search-outerWrapper">
       <div class="search-wrapper">
         <div class="search-input" @click="goToSearch">
@@ -109,9 +115,9 @@ onUnmounted(() => {
           <div class="goods-content">
             <span class="goods-title">{{ p.title }}</span>
             <div class="priceArea">
-              <span class="current-tag">¥</span>
-              <span class="current-money">{{ p.price === null ? '0.00' : p.price.toFixed(2) }}</span>
-              <span v-if="p.sales" class="sold-out">{{ p.sales }} sold</span>
+              <span class="current-tag">$</span>
+              <span class="current-money">{{ priceUsd(p) }}</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} Lists</span>
             </div>
           </div>
         </a>
@@ -125,9 +131,9 @@ onUnmounted(() => {
           <div class="goods-content">
             <span class="goods-title">{{ p.title }}</span>
             <div class="priceArea">
-              <span class="current-tag">¥</span>
-              <span class="current-money">{{ p.price === null ? '0.00' : p.price.toFixed(2) }}</span>
-              <span v-if="p.sales" class="sold-out">{{ p.sales }} sold</span>
+              <span class="current-tag">$</span>
+              <span class="current-money">{{ priceUsd(p) }}</span>
+              <span v-if="p.sales" class="sold-out">{{ p.sales }} Lists</span>
             </div>
           </div>
         </a>
@@ -178,49 +184,53 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Ported 1:1 from the reference capture's own CSS (vw values converted to
-   px at a 375px mobile design width - the file's own component stylesheet,
-   not its generic box-reset block, wins wherever the two conflicted, e.g.
-   footerBar's !important height/position). The whole page is capped at a
-   480px centered column so it doesn't stretch edge-to-edge on wide screens. */
+/* Ported 1:1 from the reference capture's own CSS, in its own vw units
+   (unconverted) rather than an approximated px scale - vw is already
+   viewport-relative, so copying the values as-is is the only way to get
+   truly identical proportions on a real device instead of an
+   approximation that drifts from the reference on anything other than
+   one assumed screen width. The file's own component stylesheet, not
+   its generic box-reset block, wins wherever the two conflicted, e.g.
+   footerBar's !important height/position. */
 .home-page {
-  max-width: 480px;
-  margin: 0 auto;
+  width: 100vw;
   min-height: 100vh;
   background-color: #f2f2f2;
-  padding-bottom: 95px;
+  padding-bottom: 25vw;
+  overflow-x: hidden;
 }
 
 .search-outerWrapper {
-  width: 100%;
-  padding: 9px 0;
+  width: 100vw;
+  padding: 2.4vw 0;
   background-color: #fff;
 }
 .search-wrapper {
   display: flex;
-  width: 95.2%;
+  width: 95.2vw;
   margin: 0 auto;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  height: 35px;
+  height: 9.33333vw;
 }
 .search-input {
   display: flex;
   flex-direction: row;
   align-items: center;
-  border: 1.5px solid #ff6200;
-  width: 294px;
+  border: 0.4vw solid #ff6200;
+  width: 78.4vw;
   flex: 1;
-  border-radius: 6px;
-  margin: 0 9px 0 0;
+  border-radius: 1.6vw;
+  margin: 0 2.4vw 0 0;
   background-color: #fff;
-  padding: 0 8px;
+  padding: 0 2.1333vw;
+  box-sizing: border-box;
   cursor: pointer;
 }
 .search-img {
-  width: 16px;
-  height: 16px;
+  width: 4.4vw;
+  height: 4.4vw;
   box-sizing: border-box;
   color: #999;
   flex-shrink: 0;
@@ -232,23 +242,23 @@ onUnmounted(() => {
 .search-text {
   flex: 1;
   min-width: 0;
-  height: 35px;
-  line-height: 35px;
-  padding-left: 6px;
-  font-size: 12px;
+  height: 9.33333vw;
+  line-height: 9.33333vw;
+  padding-left: 1.6vw;
+  font-size: 3.2vw;
   color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .login-btn {
-  width: 54px;
-  height: 35px;
+  width: 14.4vw;
+  height: 9.33333vw;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 1.6vw;
   background-color: #ff7044;
-  font-size: 15px;
-  line-height: 35px;
+  font-size: 4vw;
+  line-height: 9.33333vw;
   color: #fff;
   text-align: center;
 }
@@ -257,27 +267,30 @@ onUnmounted(() => {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  width: 100%;
-  padding: 9px 9px 0;
+  width: 100vw;
+  padding: 2.4vw 2.4vw 0;
+  box-sizing: border-box;
 }
 .product-left,
 .product-right {
   display: flex;
   flex-direction: column;
-  width: 46.4%;
+  width: 46.4vw;
 }
 .goods-container {
   display: flex;
   flex-direction: column;
+  width: 46.4vw;
   background: #fff;
-  margin-bottom: 9px;
-  border-radius: 6px;
+  margin-bottom: 2.4vw;
+  border-radius: 1.6vw;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .tuipin-main-img-box {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 46.4vw;
+  height: 46.4vw;
 }
 .tuipin-main-img {
   display: block;
@@ -291,15 +304,18 @@ onUnmounted(() => {
   background-color: rgba(0, 0, 0, 0.08);
 }
 .goods-content {
-  padding: 9px;
+  padding: 2.4vw;
   position: relative;
+  width: 46.4vw;
+  box-sizing: border-box;
 }
 .goods-title {
   display: block;
-  font-size: 14px;
+  font-size: 3.7333vw;
   white-space: nowrap;
-  line-height: 16px;
+  line-height: 4.2667vw;
   color: #222;
+  width: 41.6vw;
   text-overflow: ellipsis;
   overflow: hidden;
 }
@@ -307,83 +323,84 @@ onUnmounted(() => {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  margin-top: 10px;
+  width: 41.6vw;
+  height: 4.2667vw;
+  margin-top: 2.6667vw;
 }
 .current-tag {
-  font-size: 12px;
-  line-height: 14px;
+  font-size: 3.2vw;
+  line-height: 3.7333vw;
   font-weight: 500;
   color: rgb(255, 41, 0);
 }
 .current-money {
-  font-size: 16px;
+  font-size: 4.2667vw;
   font-weight: 500;
   color: rgb(255, 41, 0);
-  height: 16px;
-  line-height: 16px;
+  height: 4.2667vw;
+  line-height: 4.2667vw;
 }
 .sold-out {
-  font-size: 12px;
+  font-size: 3.2vw;
   color: rgb(136, 136, 136);
-  margin-left: 6px;
+  margin-left: 1.6vw;
 }
 
 .skeleton-list {
   display: flex;
-  gap: 9px;
-  padding: 0 9px;
+  gap: 2.4vw;
+  padding: 0 2.4vw;
 }
 .skeleton-card {
   flex: 1;
   aspect-ratio: 3 / 4;
-  border-radius: 6px;
+  border-radius: 1.6vw;
   background: #e5e5e5;
 }
 
 .footerBar {
-  height: 83px !important;
+  height: 22.13333vw !important;
   position: fixed !important;
-  left: 50%;
+  left: 0;
   bottom: 0;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
+  width: 100vw;
   overflow: hidden;
   background-color: #fff;
   z-index: 30;
 }
 .footerBarCon {
-  width: 100%;
+  width: 100vw;
   height: 100%;
-  padding: 0 41px;
+  padding: 0 11.06667vw;
+  box-sizing: border-box;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
 }
 .tab-item {
-  height: 38px;
+  height: 10.13333vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 7px;
+  margin-top: 1.86667vw;
   color: #222;
 }
 .tab-img {
-  width: 20px;
-  height: 20px;
+  width: 5.33333vw;
+  height: 5.33333vw;
   color: #999;
 }
 .tab-text {
-  font-size: 11px !important;
-  margin-top: 7.5px;
-  line-height: 11px;
+  font-size: 2.93333vw !important;
+  margin-top: 2vw;
+  line-height: 2.93333vw;
   color: #222;
 }
 .active-image {
-  width: 37px;
-  height: 37px;
+  width: 9.86667vw;
+  height: 9.86667vw;
   color: #ff6a00;
 }
 </style>
