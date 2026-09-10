@@ -50,6 +50,7 @@ function onImagePicked(e) {
           <input
             v-model="keyword"
             type="search"
+            enterkeyhint="search"
             placeholder="Find the product you're looking for"
             class="btn-search"
           />
