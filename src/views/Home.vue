@@ -144,6 +144,7 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 400;
   width: 100%;
+  min-width: 0;
 }
 .delay-tip-container-words {
   position: relative;
