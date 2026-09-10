@@ -168,6 +168,8 @@ function onImagePicked(e) {
   position: relative;
 }
 .input {
+  display: flex;
+  align-items: center;
   color: #222;
   text-overflow: ellipsis;
   white-space: nowrap;

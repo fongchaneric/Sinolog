@@ -299,10 +299,13 @@ onUnmounted(() => {
 .cameraButton {
   color: #222;
 }
-.cameraButton svg,
-.clearButton svg {
+.cameraButton svg {
   width: 100%;
   height: 100%;
+}
+.clearButton svg {
+  width: 11px;
+  height: 11px;
 }
 .cancelButton {
   color: #333;
